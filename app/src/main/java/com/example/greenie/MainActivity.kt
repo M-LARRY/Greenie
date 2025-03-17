@@ -12,66 +12,29 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import com.example.greenie.ui.theme.GreenieTheme
 import dev.ricknout.composesensors.light.rememberLightSensorValueAsState
-import android.location.Location
 import androidx.compose.runtime.*
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import android.Manifest
-import android.content.Context
-import android.location.LocationManager
-import android.util.Log
 import androidx.annotation.RequiresPermission
-
-class LocationExample(private val context: Context, private  val onLocationChangedCB: (Location) -> Unit) {
-
-    private var locationManager: LocationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-    private var listener: MyLocationListener
-
-    init {
-        listener = MyLocationListener()
-    }
-
-    @RequiresPermission(allOf = [Manifest.permission.ACCESS_COARSE_LOCATION])
-    fun startLocationUpdates() {
-        locationManager.requestLocationUpdates(
-            LocationManager.GPS_PROVIDER, // Provider (GPS or Network)
-            1000, // Minimum time between updates in milliseconds (1 second)
-            1f, // Minimum distance between updates in meters (1 meter)
-            listener
-        )
-    }
-
-    fun stopLocationUpdates() {
-        locationManager.removeUpdates(listener)
-    }
-
-    // Define your LocationListener implementation
-    inner class MyLocationListener : android.location.LocationListener {
-        override fun onLocationChanged(location: Location) {
-            onLocationChangedCB(location)
-            val latitude = location.latitude
-            val longitude = location.longitude
-            Log.d("GPS-->", "New Location: Latitude - $latitude, Longitude - $longitude")
-            // Use the location data as needed
-        }
-
-        override fun onProviderEnabled(provider: String) {}
-        override fun onProviderDisabled(provider: String) {}
-    }
-}
 
 class MainActivity : ComponentActivity() {
 
-    private var latitude by mutableStateOf(0.0)
-    private var longitude by mutableStateOf(0.0)
-    private lateinit var locationExample: LocationExample
+    // Private variables to store location data
+    private var latitude by mutableDoubleStateOf(0.0)
+    private var longitude by mutableDoubleStateOf(0.0)
+    private var brightness by mutableFloatStateOf(0f) // Store brightness as a float
 
+    // Private variable to handle location updates
+    private lateinit var locationHelper: LocationHelper
+
+    // Function to request coarse location permission
     fun requestCoarseLocationPermission() {
+        // Check if the permission has already been granted
         if (ContextCompat.checkSelfPermission(this,
                 android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // Request the permission
             ActivityCompat.requestPermissions(
                 this,
                 arrayOf(android.Manifest.permission.ACCESS_COARSE_LOCATION),
@@ -80,59 +43,59 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    @RequiresPermission(Manifest.permission.ACCESS_COARSE_LOCATION)
+    // Function to start location updates
+    @RequiresPermission(android.Manifest.permission.ACCESS_COARSE_LOCATION)
     override fun onResume() {
         super.onResume()
         // Start listening for location updates when the activity resumes
-        locationExample.startLocationUpdates()
+        locationHelper.startLocationUpdates()
     }
 
+    // Function to stop location updates when the activity pauses
     override fun onPause() {
         super.onPause()
         // Stop listening for location updates when the activity pauses
-        locationExample.stopLocationUpdates()
+        locationHelper.stopLocationUpdates()
     }
 
+    // onCreate function to initialize the activity
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         requestCoarseLocationPermission()
-        locationExample = LocationExample(this) { location ->
-            Log.d("GPS-->", "Updating location...")
+        locationHelper = LocationHelper(this) { location ->
             latitude = location.latitude
             longitude = location.longitude
         }
         setContent {
             GreenieTheme {
+                // Use rememberLightSensorValueAsState().value.value to get the brightness value
+                brightness = rememberLightSensorValueAsState().value.value
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding),
+                        brightness = brightness,
                         latitude = latitude,
-                        longitude = longitude
+                        longitude = longitude,
+                        modifier = Modifier.padding(innerPadding),
                     )
                 }
             }
         }
     }
-
 }
 
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier, latitude: Double, longitude: Double) {
-
-    val brightness by rememberLightSensorValueAsState()
+fun Greeting(
+    brightness: Float,
+    latitude: Double,
+    longitude: Double,
+    modifier: Modifier = Modifier
+) {
 
     Text(
-        text = "Brightness: ${brightness.value}, Latitude: $latitude, Longitude: $longitude",
+        text = "Brightness: $brightness,\n" +
+                "Latitude: $latitude,\n" +
+                "Longitude: $longitude",
         modifier = modifier
     )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    GreenieTheme {
-        Greeting(name = "Android", latitude = 0.0, longitude = 0.0)
-    }
 }
