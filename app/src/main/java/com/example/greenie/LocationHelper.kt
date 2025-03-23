@@ -3,6 +3,7 @@ package com.example.greenie
 import android.Manifest
 import android.content.Context
 import android.location.Location
+import android.location.LocationListener
 import android.location.LocationManager
 import android.util.Log
 import androidx.annotation.RequiresPermission
@@ -29,7 +30,7 @@ class LocationHelper(private val context: Context, private val onLocationChanged
     /**
      * Starts location updates using the specified provider, time interval, and minimum distance.
      *
-     * @RequiresPermission(allOf = [Manifest.permission.ACACCESS_COARSE_LOCATION])
+     * @RequiresPermission(allOf = [Manifest.permission.ACCESS_COARSE_LOCATION])
      * @param provider The location provider to use (e.g., LocationManager.GPS_PROVIDER, LocationManager.NETWORK_PROVIDER).
      * @param interval The minimum time between location updates in milliseconds.
      * @param accuracy The minimum distance between location updates in meters.
@@ -54,7 +55,7 @@ class LocationHelper(private val context: Context, private val onLocationChanged
      * Inner class implementing the LocationListener interface.
      * This class handles location updates and calls the provided callback function.
      */
-    inner class LocationListenerCB : android.location.LocationListener {
+    inner class LocationListenerCB : LocationListener {
         /**
          * Called when a new location is available.
          *

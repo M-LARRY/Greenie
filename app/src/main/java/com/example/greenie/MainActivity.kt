@@ -2,6 +2,7 @@ package com.example.greenie
 
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -18,6 +19,13 @@ import androidx.compose.runtime.*
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.annotation.RequiresPermission
+import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 
 class MainActivity : ComponentActivity() {
 
@@ -85,17 +93,67 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
+fun BarChart(value: Float = 100f) {
+    val maxValue = 2000f
+    val barLength = (value / maxValue)
+    Log.d("Bar length", "${barLength * 100}%")
+    var level = ""
+    if (value < 500){
+        level = "Dark"
+    }
+    else if (value < 1500){
+        level = "Shade"
+    }
+    else if (value < 3000){
+        level = "Half-Shade"
+    }
+    else if (value < 6000){
+        level = "Partial Sun"
+    }
+    else {
+        level = "Full Sun"
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
+        Text(
+            text = "Brightness level: $level",
+            modifier = Modifier
+        )
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(16.dp))
+                .background(Color(0x40FFBF30))
+        ) {
+            Box(
+                modifier = Modifier
+                    .animateContentSize()
+                    .height(56.dp)
+                    .fillMaxWidth(fraction = barLength)
+                    .background(Color(0xFFFFBF30))
+            )
+        }
+    }
+}
+
+@Composable
 fun Greeting(
     brightness: Float,
     latitude: Double,
     longitude: Double,
     modifier: Modifier = Modifier
 ) {
-
-    Text(
-        text = "Brightness: $brightness,\n" +
-                "Latitude: $latitude,\n" +
-                "Longitude: $longitude",
-        modifier = modifier
-    )
+    Column () {
+        Text(
+            text = "Brightness: $brightness,\n" +
+                    "Latitude: $latitude,\n" +
+                    "Longitude: $longitude",
+            modifier = modifier
+        )
+        BarChart(value = brightness)
+    }
 }
