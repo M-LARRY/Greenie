@@ -43,6 +43,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.example.greenie.model.Search
 import com.example.greenie.network.ApiClient
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
@@ -89,9 +90,13 @@ class MainActivity : ComponentActivity() {
         // TODO: logic to connect to API here!
 
         GlobalScope.launch {
-            val response = ApiClient.retrofit.getPost().await()
+            val response = ApiClient.retrofit.searchPlants(latitude, longitude, brightness).await()
 
             Log.d("debug", response.toString())
+
+//            val response2 = ApiClient.retrofit.saveSearch("testUser", Search(longitude, latitude, brightness)).await()
+//
+//            Log.d("debug", response2.toString())
 
             // Code to execute after the delay
             waitingResponse = false
