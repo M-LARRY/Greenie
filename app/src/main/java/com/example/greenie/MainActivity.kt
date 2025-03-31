@@ -43,9 +43,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.example.greenie.network.ApiClient
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import retrofit2.await
 
 class MainActivity : ComponentActivity() {
 
@@ -85,19 +87,17 @@ class MainActivity : ComponentActivity() {
         waitingResponse = true
         Log.d("debug", "Query $latitude, $longitude, $brightness")
         // TODO: logic to connect to API here!
-        var response : Map<String, Int> = mapOf(
-            "0" to 0,
-            "1" to 1,
-            "2" to 2
-            )
+
         GlobalScope.launch {
-            delay(timeout) // Suspends the coroutine for 3 seconds
+            val response = ApiClient.retrofit.getPost().await()
+
+            Log.d("debug", response.toString())
 
             // Code to execute after the delay
             waitingResponse = false
         }
-        val intent = Intent(context, QueryResults::class.java)
-        context.startActivity(intent)
+//        val intent = Intent(context, QueryResults::class.java)
+//        context.startActivity(intent)
         return
     }
 
