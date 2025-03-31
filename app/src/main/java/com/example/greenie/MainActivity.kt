@@ -45,10 +45,15 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.greenie.model.Search
 import com.example.greenie.network.ApiClient
+import androidx.navigation.NavController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import retrofit2.await
+import kotlinx.serialization.Serializable
 
 class MainActivity : ComponentActivity() {
 
@@ -83,16 +88,16 @@ class MainActivity : ComponentActivity() {
 
     fun queryFun(
         context: Context
-    ) {
+    ) : String {
         var timeout = 3000L
         waitingResponse = true
         Log.d("debug", "Query $latitude, $longitude, $brightness")
         // TODO: logic to connect to API here!
 
         GlobalScope.launch {
-            val response = ApiClient.retrofit.searchPlants(latitude, longitude, brightness).await()
+            // val response = ApiClient.retrofit.searchPlants(latitude, longitude, brightness).await()
 
-            Log.d("debug", response.toString())
+            // Log.d("debug", response.toString())
 
 //            val response2 = ApiClient.retrofit.saveSearch("testUser", Search(longitude, latitude, brightness)).await()
 //
@@ -101,9 +106,8 @@ class MainActivity : ComponentActivity() {
             // Code to execute after the delay
             waitingResponse = false
         }
-//        val intent = Intent(context, QueryResults::class.java)
-//        context.startActivity(intent)
-        return
+
+        return "OK"
     }
 
     // Function to start location updates
@@ -136,46 +140,22 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             GreenieTheme {
-                val scrollBehavior =
-                    TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
+
                 // Use rememberLightSensorValueAsState().value.value to get the brightness value
                 brightness = rememberLightSensorValueAsState().value.value
-                Scaffold(
-                    topBar = {
-                        LargeTopAppBar(
-                            colors = TopAppBarDefaults.topAppBarColors(
-                                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                                titleContentColor = MaterialTheme.colorScheme.primary,
-                            ),
-                            title = {
-                                Text(
-                                    "Greenie",
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                            },
-                            actions = {
-                                IconButton(onClick = { /* do something */ }) {
-                                    Icon(
-                                        imageVector = Icons.Filled.MoreVert,
-                                        contentDescription = "Localized description"
-                                    )
-                                }
-                            },
-                            scrollBehavior = scrollBehavior
-                        )
-                    },
-                ) { innerPadding ->
-                    Column(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
-                        SensorPanel(
-                            brightness = brightness,
-                            location = locationString,
-                            locationFound = locationFound,
-                            queryFun = ::queryFun,
-                            waitingResponse = waitingResponse,
-                            modifier = Modifier.padding(innerPadding),
-                        )
-                    }
+                val navController = rememberNavController()
+
+                NavHost(navController = navController, startDestination = "home") {
+                    composable("home") { HomePage(
+                        brightness = brightness,
+                        location = locationString,
+                        locationFound = locationFound,
+                        queryFun = ::queryFun,
+                        waitingResponse = waitingResponse,
+                        navController = navController
+                    ) }
+                    composable("plantslist") { QueryResults() }
+                    // Add more destinations similarly.
                 }
             }
         }
@@ -255,9 +235,10 @@ fun LocationElement(
 
 @Composable
 fun QueryButton(
-    queryFun: (context: Context) -> Unit,
+    queryFun: (context: Context) -> String,
     enabled: Boolean,
     waitingResponse: Boolean,
+    navController: NavController
 ) {
 
     @Composable
@@ -266,7 +247,11 @@ fun QueryButton(
     }
 
     fun onClick(context: Context) {
-        queryFun(context)
+        var res = queryFun(context)
+        if (res != null) {
+            Log.d("QUERYFUN", res.toString())
+            navController.navigate("plantslist")
+        }
     }
 
     val context = contextGetter()
@@ -297,14 +282,66 @@ fun SensorPanel(
     brightness: Float,
     location: String,
     locationFound: Boolean,
-    queryFun: (context: Context) -> Unit,
-    waitingResponse: Boolean,
     modifier: Modifier
 ) {
     Column (modifier = Modifier.padding(all = 16.dp)) {
         BarChart(value = brightness)
         LocationElement(location = location, locationFound = locationFound)
         HorizontalDivider(thickness = 16.dp, color = Color(0x00000000))
-        QueryButton(queryFun = queryFun, enabled = locationFound, waitingResponse = waitingResponse)
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun HomePage(
+    brightness: Float,
+    location: String,
+    locationFound: Boolean,
+    queryFun: (context: Context) -> String,
+    waitingResponse: Boolean,
+    navController: NavController
+) {
+    val scrollBehavior =
+        TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
+    Scaffold(
+        topBar = {
+            LargeTopAppBar(
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    titleContentColor = MaterialTheme.colorScheme.primary,
+                ),
+                title = {
+                    Text(
+                        "Greenie",
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                },
+                actions = {
+                    IconButton(onClick = { /* do something */ }) {
+                        Icon(
+                            imageVector = Icons.Filled.MoreVert,
+                            contentDescription = "Localized description"
+                        )
+                    }
+                },
+                scrollBehavior = scrollBehavior
+            )
+        },
+    ) { innerPadding ->
+        Column(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
+            SensorPanel(
+                brightness = brightness,
+                location = location,
+                locationFound = locationFound,
+                modifier = Modifier.padding(innerPadding),
+            )
+            QueryButton(
+                queryFun = queryFun,
+                enabled = true,
+                waitingResponse = waitingResponse,
+                navController = navController
+            )
+        }
     }
 }
