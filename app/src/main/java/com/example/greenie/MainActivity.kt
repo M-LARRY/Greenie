@@ -95,9 +95,15 @@ class MainActivity : ComponentActivity() {
         // TODO: logic to connect to API here!
 
         GlobalScope.launch {
-            // val response = ApiClient.retrofit.searchPlants(latitude, longitude, brightness).await()
+            val response = ApiClient.retrofit.searchPlants(latitude, longitude, brightness)
 
-            // Log.d("debug", response.toString())
+            Log.d("debug", response.toString())
+            
+            if (response.isSuccessful) {
+                Log.d("debug", response.body().toString())
+            } else {
+                Log.d("debug", response.errorBody().toString())
+            }
 
 //            val response2 = ApiClient.retrofit.saveSearch("testUser", Search(longitude, latitude, brightness)).await()
 //
