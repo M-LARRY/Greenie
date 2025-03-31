@@ -1,5 +1,7 @@
 package com.example.greenie
 
+import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
@@ -38,6 +40,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.GlobalScope
@@ -72,11 +75,11 @@ class MainActivity : ComponentActivity() {
     }
 
     fun determineLocation(latitude: Double, longitude: Double) : String{
-
         return latitude.toString() + longitude.toString()
     }
 
     fun queryFun(
+        context: Context
     ) {
         var timeout = 3000L
         waitingResponse = true
@@ -93,6 +96,8 @@ class MainActivity : ComponentActivity() {
             // Code to execute after the delay
             waitingResponse = false
         }
+        val intent = Intent(context, QueryResults::class.java)
+        context.startActivity(intent)
         return
     }
 
@@ -182,7 +187,6 @@ fun BarChart(value: Float = 100f) {
     else {
         barLength = 1f
     }
-    Log.d("Bar length", "${barLength * 100}%")
     var level = ""
     if (value < 500){
         level = "Dark"
@@ -246,14 +250,21 @@ fun LocationElement(
 
 @Composable
 fun QueryButton(
-    queryFun: () -> Unit,
+    queryFun: (context: Context) -> Unit,
     enabled: Boolean,
     waitingResponse: Boolean,
 ) {
-    fun onClick() {
-        queryFun()
-        Log.d("debug", "searching compatible plants...")
+
+    @Composable
+    fun contextGetter() : Context{
+        return LocalContext.current
     }
+
+    fun onClick(context: Context) {
+        queryFun(context)
+    }
+
+    val context = contextGetter()
     if (waitingResponse) {
         Button(
             onClick = {},
@@ -266,7 +277,7 @@ fun QueryButton(
     }
     else {
         Button(
-            onClick = { onClick() },
+            onClick = { onClick(context) },
             modifier = Modifier
                 .fillMaxWidth(),
             enabled = enabled
@@ -281,7 +292,7 @@ fun SensorPanel(
     brightness: Float,
     location: String,
     locationFound: Boolean,
-    queryFun: () -> Unit,
+    queryFun: (context: Context) -> Unit,
     waitingResponse: Boolean,
     modifier: Modifier
 ) {
