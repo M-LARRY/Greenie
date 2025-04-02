@@ -54,6 +54,9 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import retrofit2.await
 import kotlinx.serialization.Serializable
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
 
 class MainActivity : ComponentActivity() {
 
@@ -67,6 +70,10 @@ class MainActivity : ComponentActivity() {
 
     // Private variable to handle location updates
     private lateinit var locationHelper: LocationHelper
+
+    private lateinit var auth: FirebaseAuth
+
+    private var initialRoute : String = "login"
 
     // Function to request coarse location permission
     fun requestCoarseLocationPermission() {
@@ -131,9 +138,20 @@ class MainActivity : ComponentActivity() {
         locationHelper.stopLocationUpdates()
     }
 
+    override fun onStart() {
+        super.onStart()
+        // Check if user is signed in (non-null)
+        val currentUser = auth.currentUser
+        if (currentUser != null) {
+            Log.d("debug", "User is already signed in")
+            initialRoute = "home"
+        }
+    }
+
     // onCreate function to initialize the activity
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
+        auth = Firebase.auth;
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         requestCoarseLocationPermission()
@@ -151,7 +169,7 @@ class MainActivity : ComponentActivity() {
                 brightness = rememberLightSensorValueAsState().value.value
                 val navController = rememberNavController()
 
-                NavHost(navController = navController, startDestination = "home") {
+                NavHost(navController = navController, startDestination = initialRoute) {
                     composable("home") { HomePage(
                         brightness = brightness,
                         location = locationString,
@@ -160,6 +178,8 @@ class MainActivity : ComponentActivity() {
                         waitingResponse = waitingResponse,
                         navController = navController
                     ) }
+                    composable("login") { SigninScreen(auth) }
+                    composable("signup") { SignupScreen(auth) }
                     composable("plantslist") { QueryResults() }
                     // Add more destinations similarly.
                 }
