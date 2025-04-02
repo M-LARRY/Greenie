@@ -44,9 +44,6 @@ import com.example.greenie.ui.theme.GreenieTheme
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
 
 class SigninActivity : ComponentActivity() {
     private lateinit var auth: FirebaseAuth
