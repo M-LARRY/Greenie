@@ -44,7 +44,7 @@ android {
 
 dependencies {
 
-    val nav_version = "2.5.0"
+    val nav_version = "2.8.0"
 
     // Import the BoM for the Firebase platform
     implementation(platform("com.google.firebase:firebase-bom:33.11.0"))
