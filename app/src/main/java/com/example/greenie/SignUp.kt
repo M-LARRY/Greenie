@@ -1,11 +1,6 @@
 package com.example.greenie
 
-import android.content.Intent
-import android.os.Bundle
-import android.util.Log
 import android.widget.Toast
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -21,10 +16,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -40,36 +33,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.greenie.ui.theme.GreenieTheme
+import androidx.navigation.NavHostController
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.ktx.auth
-import com.google.firebase.ktx.Firebase
-
-
-class SignupActivity : ComponentActivity() {
-    private lateinit var auth: FirebaseAuth
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        auth = Firebase.auth
-
-        setContent {
-            GreenieTheme {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-                    SignupScreen(auth)
-                }
-            }
-        }
-    }
-}
-
-
 
 @Composable
-fun SignupScreen(auth: FirebaseAuth) {
+fun SignupScreen(nav: NavHostController, auth: FirebaseAuth) {
+    if (auth.currentUser != null) nav.navigate(HomePage)
+
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -140,18 +110,17 @@ fun SignupScreen(auth: FirebaseAuth) {
         // Signup button
         Button(
             onClick = {
-                /* Signup logic would go here */
                 auth.createUserWithEmailAndPassword(email, password)
                     .addOnCompleteListener { task ->
                         if (task.isSuccessful) {
-                            // Sign in success, update UI with the signed-in user's information
-                            Log.d("SIGNUP", "createUserWithEmail:success")
-                            val user = auth.currentUser
-                            Toast.makeText(context, "Authentication successful.",
-                                Toast.LENGTH_SHORT).show()
+                            Toast.makeText(
+                                context,
+                                "Authentication successful.",
+                                Toast.LENGTH_SHORT
+                            ).show()
+
+                            nav.navigate(HomePage)
                         } else {
-                            // If sign in fails, display a message to the user.
-                            Log.w("SIGNUP", "createUserWithEmail:failure", task.exception)
                             Toast.makeText(
                                 context,
                                 "Authentication failed.",
@@ -210,11 +179,7 @@ fun SignupScreen(auth: FirebaseAuth) {
         ) {
             Text("Already have an account? ")
             TextButton(onClick = {
-                // Navigate back to Login screen
-                val intent = Intent(context, MainActivity::class.java)
-                // Clear back stack so user can't go back to signup after logging in
-                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                context.startActivity(intent)
+                nav.navigate(SigninPage)
             }) {
                 Text("Log In", color = Color(0xFF4CAF50))
             }

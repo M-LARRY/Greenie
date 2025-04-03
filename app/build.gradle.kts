@@ -50,12 +50,8 @@ dependencies {
     implementation(platform(libs.firebase.bom))
 
     implementation (libs.firebase.auth.ktx) {
-        exclude("com.google.android.play", "core-common")
+        exclude("com.google.firebase", "core-common")
     }
-
-    // Add the dependency for the Firebase Authentication library
-    // When using the BoM, you don't specify versions in Firebase library dependencies
-    //implementation("com.google.firebase:firebase-auth")
 
     // Jetpack Compose integration
     implementation("androidx.navigation:navigation-compose:$nav_version")

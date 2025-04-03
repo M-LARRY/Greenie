@@ -19,7 +19,6 @@ import androidx.core.content.ContextCompat
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.greenie.network.ApiClient
 import com.example.greenie.ui.theme.GreenieTheme
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
@@ -83,15 +82,15 @@ class MainActivity : ComponentActivity() {
         // TODO: logic to connect to API here!
 
         GlobalScope.launch {
-            val response = ApiClient.retrofit.searchPlants(latitude, longitude, brightness)
-
-            Log.d("debug", response.toString())
-            
-            if (response.isSuccessful) {
-                Log.d("debug", response.body().toString())
-            } else {
-                Log.d("debug", response.errorBody().toString())
-            }
+//            val response = ApiClient.retrofit.searchPlants(latitude, longitude, brightness)
+//
+//            Log.d("debug", response.toString())
+//
+//            if (response.isSuccessful) {
+//                Log.d("debug", response.body().toString())
+//            } else {
+//                Log.d("debug", response.errorBody().toString())
+//            }
 
 //            val response2 = ApiClient.retrofit.saveSearch("testUser", Search(longitude, latitude, brightness)).await()
 //
@@ -119,18 +118,7 @@ class MainActivity : ComponentActivity() {
         locationHelper.stopLocationUpdates()
     }
 
-//    override fun onStart() {
-//        super.onStart()
-//        // Check if user is signed in (non-null)
-//        val currentUser = auth.currentUser
-//        if (currentUser != null) {
-//            Log.d("debug", "User is already signed in")
-//            initialRoute = HomePage
-//        }
-//    }
-
     // onCreate function to initialize the activity
-    @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         auth = Firebase.auth;
         super.onCreate(savedInstanceState)
@@ -143,8 +131,6 @@ class MainActivity : ComponentActivity() {
             locationFound = true
         }
 
-        val initialRoute = if (auth.currentUser != null) HomePage else SignupPage
-
         setContent {
             GreenieTheme {
 
@@ -152,7 +138,7 @@ class MainActivity : ComponentActivity() {
                 brightness = rememberLightSensorValueAsState().value.value
                 val navController = rememberNavController()
 
-                NavHost(navController = navController, startDestination = initialRoute) {
+                NavHost(navController = navController, startDestination = SigninPage) {
                     composable<HomePage> { HomePage(
                         brightness = brightness,
                         location = locationString,
@@ -166,8 +152,8 @@ class MainActivity : ComponentActivity() {
                     composable<PlantsListPage> { PlantsListPage(
                         onNavigateToSomething = {}
                     ) }
-                    composable<SigninPage> { SigninScreen(auth) }
-                    composable<SignupPage> { SignupScreen(auth) }
+                    composable<SigninPage> { SigninScreen(navController, auth) }
+                    composable<SignupPage> { SignupScreen(navController, auth) }
                     // Add more destinations similarly.
                 }
             }
