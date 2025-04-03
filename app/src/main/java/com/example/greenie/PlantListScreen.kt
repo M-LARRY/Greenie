@@ -24,7 +24,7 @@ import com.example.greenie.ui.theme.GreenieTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PlantsListPage (
+fun PlantListScreen (
     onNavigateToSomething: () -> Unit
 ) {
 

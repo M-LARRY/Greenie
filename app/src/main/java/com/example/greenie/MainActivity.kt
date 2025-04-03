@@ -8,7 +8,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.annotation.RequiresPermission
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableFloatStateOf
@@ -139,7 +138,7 @@ class MainActivity : ComponentActivity() {
                 val navController = rememberNavController()
 
                 NavHost(navController = navController, startDestination = SigninPage) {
-                    composable<HomePage> { HomePage(
+                    composable<HomePage> { HomeScreen(
                         brightness = brightness,
                         location = locationString,
                         locationFound = locationFound,
@@ -149,7 +148,7 @@ class MainActivity : ComponentActivity() {
                             navController.navigate(PlantsListPage)
                         }
                     ) }
-                    composable<PlantsListPage> { PlantsListPage(
+                    composable<PlantsListPage> { PlantListScreen(
                         onNavigateToSomething = {}
                     ) }
                     composable<SigninPage> { SigninScreen(navController, auth) }

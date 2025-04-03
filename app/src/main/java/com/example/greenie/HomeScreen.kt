@@ -165,7 +165,7 @@ fun SensorPanel(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomePage(
+fun HomeScreen(
     brightness: Float,
     location: String,
     locationFound: Boolean,
