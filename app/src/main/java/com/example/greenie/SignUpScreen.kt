@@ -34,11 +34,12 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import com.example.greenie.navigation.Route
 import com.google.firebase.auth.FirebaseAuth
 
 @Composable
-fun SignupScreen(nav: NavHostController, auth: FirebaseAuth) {
-    if (auth.currentUser != null) nav.navigate(HomePage)
+fun SignUpScreen(nav: NavHostController, auth: FirebaseAuth) {
+    if (auth.currentUser != null) nav.navigate(Route.Home)
 
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
@@ -119,7 +120,7 @@ fun SignupScreen(nav: NavHostController, auth: FirebaseAuth) {
                                 Toast.LENGTH_SHORT
                             ).show()
 
-                            nav.navigate(HomePage)
+                            nav.navigate(Route.Home)
                         } else {
                             Toast.makeText(
                                 context,
@@ -179,7 +180,7 @@ fun SignupScreen(nav: NavHostController, auth: FirebaseAuth) {
         ) {
             Text("Already have an account? ")
             TextButton(onClick = {
-                nav.navigate(SigninPage)
+                nav.navigate(Route.SignIn)
             }) {
                 Text("Log In", color = Color(0xFF4CAF50))
             }

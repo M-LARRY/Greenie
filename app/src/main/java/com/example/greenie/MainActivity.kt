@@ -19,6 +19,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.greenie.model.Plant
+import com.example.greenie.navigation.Route
 import com.example.greenie.network.ApiClient
 import com.example.greenie.ui.theme.GreenieTheme
 import com.google.firebase.auth.FirebaseAuth
@@ -27,19 +28,6 @@ import com.google.firebase.ktx.Firebase
 import dev.ricknout.composesensors.light.rememberLightSensorValueAsState
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import kotlinx.serialization.Serializable
-
-@Serializable
-object HomePage
-
-@Serializable
-object PlantsListPage
-
-@Serializable
-object SigninPage
-
-@Serializable
-object SignupPage
 
 class MainActivity : ComponentActivity() {
 
@@ -141,23 +129,23 @@ class MainActivity : ComponentActivity() {
                 brightness = rememberLightSensorValueAsState().value.value
                 val navController = rememberNavController()
 
-                NavHost(navController = navController, startDestination = SigninPage) {
-                    composable<HomePage> { HomeScreen(
+                NavHost(navController = navController, startDestination = Route.SignIn) {
+                    composable<Route.Home> { HomeScreen(
                         brightness = brightness,
                         location = locationString,
                         locationFound = locationFound,
                         queryFun = ::queryFun,
                         waitingResponse = waitingResponse,
                         onNavigateToPlantsListPage = {
-                            navController.navigate(PlantsListPage)
+                            navController.navigate(Route.PlantList)
                         }
                     ) }
-                    composable<PlantsListPage> { PlantListScreen(
+                    composable<Route.PlantList> { PlantListScreen(
                         plants,
                         onNavigateToSomething = {}
                     ) }
-                    composable<SigninPage> { SigninScreen(navController, auth) }
-                    composable<SignupPage> { SignupScreen(navController, auth) }
+                    composable<Route.SignIn> { SignInScreen(navController, auth) }
+                    composable<Route.SignUp> { SignUpScreen(navController, auth) }
                     // Add more destinations similarly.
                 }
             }
