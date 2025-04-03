@@ -120,7 +120,9 @@ fun SignUpScreen(nav: NavHostController, auth: FirebaseAuth) {
                                 Toast.LENGTH_SHORT
                             ).show()
 
-                            nav.navigate(Route.Home)
+                            nav.navigate(Route.Home) {
+                                popUpTo(Route.SignUp) { inclusive = true }
+                            }
                         } else {
                             Toast.makeText(
                                 context,
