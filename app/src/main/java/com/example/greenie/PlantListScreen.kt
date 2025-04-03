@@ -20,11 +20,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.example.greenie.model.Plant
 import com.example.greenie.ui.theme.GreenieTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlantListScreen (
+    plants : List<Plant>,
     onNavigateToSomething: () -> Unit
 ) {
 
@@ -60,7 +62,7 @@ fun PlantListScreen (
         ) { innerPadding ->
             Column(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
                 PlantsList(
-                    plants = 10
+                    plants = plants
                 )
             }
         }
@@ -70,17 +72,20 @@ fun PlantListScreen (
 
 @Composable
 fun PlantsList(
-    plants: Int
+    plants: List<Plant>
 ) {
     LazyVerticalGrid(GridCells.Adaptive(minSize = 192.dp))  {
-        items(plants) { plant -> PlantItem(plant)
+        items(plants.size) {
+            for (plant in plants) {
+                PlantItem(plant = plant)
+            }
         }
     }
 }
 
 @Composable
 fun PlantItem(
-    plant: Int
+    plant: Plant
 ) {
-    Text("Culo")
+    Text(plant.name)
 }

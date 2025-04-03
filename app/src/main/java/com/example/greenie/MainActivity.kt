@@ -18,6 +18,8 @@ import androidx.core.content.ContextCompat
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.greenie.model.Plant
+import com.example.greenie.network.ApiClient
 import com.example.greenie.ui.theme.GreenieTheme
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
@@ -48,6 +50,7 @@ class MainActivity : ComponentActivity() {
     private var locationString by mutableStateOf("")
     private var locationFound by mutableStateOf(false)
     private var waitingResponse by mutableStateOf(false)
+    private var plants by mutableStateOf(listOf<Plant>())
 
     // Private variable to handle location updates
     private lateinit var locationHelper: LocationHelper
@@ -81,15 +84,16 @@ class MainActivity : ComponentActivity() {
         // TODO: logic to connect to API here!
 
         GlobalScope.launch {
-//            val response = ApiClient.retrofit.searchPlants(latitude, longitude, brightness)
-//
-//            Log.d("debug", response.toString())
-//
-//            if (response.isSuccessful) {
-//                Log.d("debug", response.body().toString())
-//            } else {
-//                Log.d("debug", response.errorBody().toString())
-//            }
+            val response = ApiClient.retrofit.searchPlants(latitude, longitude, brightness)
+
+            Log.d("debug", response.toString())
+
+            if (response.isSuccessful && response.body() != null) {
+                Log.d("debug", response.body().toString())
+                plants = response.body()!!
+            } else {
+                Log.d("debug", response.errorBody().toString())
+            }
 
 //            val response2 = ApiClient.retrofit.saveSearch("testUser", Search(longitude, latitude, brightness)).await()
 //
@@ -149,6 +153,7 @@ class MainActivity : ComponentActivity() {
                         }
                     ) }
                     composable<PlantsListPage> { PlantListScreen(
+                        plants,
                         onNavigateToSomething = {}
                     ) }
                     composable<SigninPage> { SigninScreen(navController, auth) }
