@@ -5,8 +5,8 @@ import android.content.Context
 import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
-import android.util.Log
 import androidx.annotation.RequiresPermission
+import androidx.core.location.LocationListenerCompat
 
 /**
  * Manages location updates using the Android Location Manager.
@@ -18,16 +18,11 @@ import androidx.annotation.RequiresPermission
 class LocationHelper(private val context: Context, private val onLocationChangedCB: (Location) -> Unit) {
 
     private var locationManager: LocationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-    private var listener: LocationListenerCB
     /**
-     * Initializes the LocationListener.
+     * Creates a new instance of the LocationListener.
      */
-    init {
-        /**
-         * Creates a new instance of the LocationListener.
-         */
-        listener = LocationListenerCB()
-    }
+    private var listener: LocationListener = LocationListenerCompat { onLocationChangedCB }
+
     /**
      * Starts location updates using the specified provider, time interval, and minimum distance.
      *
@@ -50,28 +45,5 @@ class LocationHelper(private val context: Context, private val onLocationChanged
      */
     fun stopLocationUpdates() {
         locationManager.removeUpdates(listener)
-    }
-    /**
-     * Inner class implementing the LocationListener interface.
-     * This class handles location updates and calls the provided callback function.
-     */
-    inner class LocationListenerCB : LocationListener {
-        /**
-         * Called when a new location is available.
-         *
-         * @param location The new location object.
-         */
-        override fun onLocationChanged(location: Location) {
-            /**
-             * Executes the callback function with the new location data.
-             */
-            onLocationChangedCB(location)
-            val latitude = location.latitude
-            val longitude = location.longitude
-            Log.d("LocationHelper", "New Location: Latitude - $latitude, Longitude - $longitude")
-            // Use the location data
-        }
-        override fun onProviderEnabled(provider: String) {}
-        override fun onProviderDisabled(provider: String) {}
     }
 }
