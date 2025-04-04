@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -27,6 +28,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -34,7 +36,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.example.greenie.model.Plant
+import com.example.greenie.model.Search
+import com.example.greenie.network.ApiClient
 import com.example.greenie.ui.theme.GreenieTheme
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -45,13 +50,15 @@ fun PlantListScreen (
     onNavigateToSomething: () -> Unit
 ) {
 
+    val scope = rememberCoroutineScope()
+
     var loading by remember { mutableStateOf(true) }
     var plants = listOf<Plant>()
 
     // Carica i dati qui dentro ------------------
     LaunchedEffect(Unit) {
         //DEBUG-----
-        plants = debugOfflinePlants() // DEBUG
+//        plants = debugOfflinePlants() // DEBUG
         //-----
 //        val response = ApiClient.retrofit.searchPlants(latitude, longitude, brightness)
 //
@@ -91,6 +98,25 @@ fun PlantListScreen (
                                 contentDescription = "Localized description"
                             )
                         }
+                        if (!loading) {
+                            IconButton(onClick = {
+                                scope.launch {
+                                    ApiClient.retrofit.saveSearch(
+                                        userId = "pippo",
+                                        body = Search(
+                                            lng = longitude,
+                                            lat = latitude,
+                                            brightness = brightness
+                                        )
+                                    )
+                                }
+                            }) {
+                                Icon(
+                                    imageVector = Icons.Filled.FavoriteBorder,
+                                    contentDescription = "Localized description"
+                                )
+                            }
+                        }
                     },
                     scrollBehavior = scrollBehavior
                 )
@@ -107,7 +133,7 @@ fun PlantListScreen (
             }
         }
     }
-    }
+}
 
 
 @Composable
@@ -136,7 +162,6 @@ fun PlantsList(
             }
         }
     }
-
 }
 
 @Composable

@@ -2,10 +2,15 @@ package com.example.greenie
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -21,33 +26,40 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import com.example.greenie.model.Search
 import com.example.greenie.ui.theme.GreenieTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SavedListScreen (
-    onNavigateToSomething: () -> Unit
+    onNavigateToSearch: () -> Unit
 ) {
 
     var loading by remember { mutableStateOf(true) }
+    var searches = listOf<Search>()
 
     // Carica i dati qui dentro ------------------
     LaunchedEffect(Unit) {
-//        val response = ApiClient.retrofit.searchPlants(latitude, longitude, brightness)
+        //DEBUG-----
+        searches = debugOfflineSearches() // DEBUG
+        //-----
+//        val response = ApiClient.retrofit.getSearches("pippo")
 //
 //        Log.d("debug", response.toString())
 //
 //        if (response.isSuccessful && response.body() != null) {
 //            Log.d("debug", response.body().toString())
-//            plants = response.body()!!
+//            searches = response.body()!!
 //        } else {
 //            Log.d("debug", response.errorBody().toString())
 //        }
-        loading = false // <-  RIGA IMPORTANTISSIMA
+        loading = false
     }
     // ------------------
 
@@ -84,7 +96,8 @@ fun SavedListScreen (
             Column(modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)) {
-                SavedList(
+                SearchesList(
+                    searches = searches,
                     loading = loading
                 )
             }
@@ -94,7 +107,8 @@ fun SavedListScreen (
 
 
 @Composable
-fun SavedList(
+fun SearchesList(
+    searches: List<Search>,
     loading: Boolean
 ) {
     if (loading) {
@@ -104,11 +118,77 @@ fun SavedList(
         ) {
             CircularProgressIndicator()
         }
-
     }
     else {
-            Text("Loaded")
+        LazyVerticalGrid(
+            GridCells.Adaptive(minSize = 192.dp),
+            modifier = Modifier.padding(8.dp)
+        )  {
+            items(searches.size) {
+                for (search in searches) {
+                    SearchItem(search = search)
+                }
+            }
+        }
     }
 }
 
+@Composable
+fun SearchItem(
+    search: Search,
+) {
+
+    val scope = rememberCoroutineScope()
+
+    Card (
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+        ),
+        modifier = Modifier.padding(4.dp),
+        onClick = {
+
+        },
+    ) {
+        Column {
+            Text(
+                search.lat.toString(),
+                modifier = Modifier.padding(paddingValues = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 8.dp))
+            )
+            Text(
+                search.lng.toString(),
+                modifier = Modifier.padding(paddingValues = PaddingValues(horizontal = 16.dp))
+            )
+            Text(
+                search.brightness.toString(),
+                modifier = Modifier.padding(paddingValues = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp))
+            )
+        }
+    }
+}
+
+fun debugOfflineSearches() : List<Search> {
+    val searches = listOf(
+        Search(
+            lat = 41.0,
+            lng = 42.0,
+            brightness = 5000f
+        ),
+        Search(
+            lat = 41.0,
+            lng = 42.0,
+            brightness = 5000f
+        ),
+        Search(
+            lat = 41.0,
+            lng = 42.0,
+            brightness = 5000f
+        ),
+        Search(
+            lat = 41.0,
+            lng = 42.0,
+            brightness = 5000f
+        ),
+    )
+    return searches
+}
 
