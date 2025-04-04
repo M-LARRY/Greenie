@@ -10,6 +10,9 @@ sealed interface Route {
     object PlantList : Route
 
     @Serializable
+    object SavedList : Route
+
+    @Serializable
     object SignIn : Route
 
     @Serializable

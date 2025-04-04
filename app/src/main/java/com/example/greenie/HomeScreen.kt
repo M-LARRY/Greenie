@@ -1,18 +1,19 @@
 package com.example.greenie
 
-import android.content.Context
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -27,49 +28,120 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun HomeScreen(
+    brightness: Float,
+    location: String,
+    locationFound: Boolean,
+    waitingResponse: Boolean,
+    onNavigateToPlantsListPage: () -> Unit,
+    onNavigateToSavedListPage: () -> Unit
+) {
+    val scrollBehavior =
+        TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
+    Scaffold(
+        topBar = {
+            LargeTopAppBar(
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    titleContentColor = MaterialTheme.colorScheme.primary,
+                ),
+                title = {
+                    Text(
+                        "Greenie",
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                },
+                actions = {
+                    IconButton(onClick = {
+                        onNavigateToSavedListPage()
+                    }) {
+                        Icon(
+                            imageVector = Icons.Filled.FavoriteBorder,
+                            contentDescription = "Localized description"
+                        )
+                    }
+                    IconButton(onClick = { /* do something */ }) {
+                        Icon(
+                            imageVector = Icons.Filled.MoreVert,
+                            contentDescription = "Localized description"
+                        )
+                    }
+
+                },
+                scrollBehavior = scrollBehavior
+            )
+        },
+    ) { innerPadding ->
+        Column(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
+            SensorPanel(
+                brightness = brightness,
+                location = location,
+                locationFound = locationFound,
+            )
+            QueryButton(
+                enabled = true,
+                waitingResponse = waitingResponse,
+                onNavigateToPlantsListPage = onNavigateToPlantsListPage,
+            )
+        }
+    }
+}
 
 @Composable
 fun BarChart(value: Float = 100f) {
     var maxValue = 7000f
     var barLength = 0f
-    if (value < maxValue){
-        barLength = (value / maxValue)
+    barLength = if (value < maxValue){
+        (value / maxValue)
     }
     else {
-        barLength = 1f
+        1f
     }
     var level = ""
-    if (value < 500){
-        level = "Dark"
+    level = if (value < 500){
+        "Dark"
     }
     else if (value < 1500){
-        level = "Shade"
+        "Shade"
     }
     else if (value < 3000){
-        level = "Half-Shade"
+        "Half-Shade"
     }
     else if (value < 6000){
-        level = "Partial Sun"
+        "Partial Sun"
     }
     else {
-        level = "Full Sun"
+        "Full Sun"
     }
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
     ) {
-        Text(
-            text = "Brightness level: $level",
-            modifier = Modifier
-        )
+        Row (
+            verticalAlignment = Alignment.Bottom
+        ) {
+            Text(
+                text = "Brightness level: ",
+                modifier = Modifier.padding(vertical = 3.dp),
+            )
+            Text(
+                text = level,
+//                modifier = Modifier.padding(8.dp),
+                style = MaterialTheme.typography.headlineMedium
+            )
+        }
+
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -99,7 +171,7 @@ fun LocationElement(
     locationFound: Boolean,
 ) {
     if (locationFound == true) {
-        Text("Current location:\n " + location)
+        Text("Current location:\n $location")
     }
     else {
         Text("Retrieving your current location...")
@@ -108,30 +180,21 @@ fun LocationElement(
 
 @Composable
 fun QueryButton(
-    queryFun: (context: Context) -> String,
     enabled: Boolean,
     waitingResponse: Boolean,
     onNavigateToPlantsListPage: () -> Unit,
 ) {
 
-    @Composable
-    fun contextGetter() : Context {
-        return LocalContext.current
+    fun onClick() {
+        onNavigateToPlantsListPage()
     }
 
-    fun onClick(context: Context) {
-        var res = queryFun(context)
-        if (res != null) {
-            onNavigateToPlantsListPage()
-        }
-    }
-
-    val context = contextGetter()
     if (waitingResponse) {
         Button(
             onClick = {},
             modifier = Modifier
-                .fillMaxWidth(),
+                .fillMaxWidth()
+                .padding(16.dp),
             enabled = enabled
         ) {
             Text("Loading...")
@@ -139,7 +202,7 @@ fun QueryButton(
     }
     else {
         Button(
-            onClick = { onClick(context) },
+            onClick = { onClick() },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
@@ -163,56 +226,3 @@ fun SensorPanel(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun HomeScreen(
-    brightness: Float,
-    location: String,
-    locationFound: Boolean,
-    queryFun: (context: Context) -> String,
-    waitingResponse: Boolean,
-    onNavigateToPlantsListPage: () -> Unit
-) {
-    val scrollBehavior =
-        TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
-    Scaffold(
-        topBar = {
-            LargeTopAppBar(
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.primary,
-                ),
-                title = {
-                    Text(
-                        "Greenie",
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                },
-                actions = {
-                    IconButton(onClick = { /* do something */ }) {
-                        Icon(
-                            imageVector = Icons.Filled.MoreVert,
-                            contentDescription = "Localized description"
-                        )
-                    }
-                },
-                scrollBehavior = scrollBehavior
-            )
-        },
-    ) { innerPadding ->
-        Column(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
-            SensorPanel(
-                brightness = brightness,
-                location = location,
-                locationFound = locationFound,
-            )
-            QueryButton(
-                queryFun = queryFun,
-                enabled = true,
-                waitingResponse = waitingResponse,
-                onNavigateToPlantsListPage = onNavigateToPlantsListPage,
-            )
-        }
-    }
-}

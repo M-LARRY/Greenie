@@ -1,9 +1,8 @@
 package com.example.greenie
 
-import android.content.Context
+import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -18,16 +17,12 @@ import androidx.core.content.ContextCompat
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.greenie.model.Plant
 import com.example.greenie.navigation.Route
-import com.example.greenie.network.ApiClient
 import com.example.greenie.ui.theme.GreenieTheme
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import dev.ricknout.composesensors.light.rememberLightSensorValueAsState
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
 
@@ -38,7 +33,6 @@ class MainActivity : ComponentActivity() {
     private var locationString by mutableStateOf("")
     private var locationFound by mutableStateOf(false)
     private var waitingResponse by mutableStateOf(false)
-    private var plants by mutableStateOf(listOf<Plant>())
 
     // Private variable to handle location updates
     private lateinit var locationHelper: LocationHelper
@@ -49,11 +43,11 @@ class MainActivity : ComponentActivity() {
     fun requestCoarseLocationPermission() {
         // Check if the permission has already been granted
         if (ContextCompat.checkSelfPermission(this,
-                android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // Request the permission
             ActivityCompat.requestPermissions(
                 this,
-                arrayOf(android.Manifest.permission.ACCESS_COARSE_LOCATION),
+                arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION),
                 102 // Use a unique requestCode for coarse location
             )
         }
@@ -63,39 +57,8 @@ class MainActivity : ComponentActivity() {
         return latitude.toString() + longitude.toString()
     }
 
-    fun queryFun(
-        context: Context
-    ) : String {
-        var timeout = 3000L
-        waitingResponse = true
-        Log.d("debug", "Query $latitude, $longitude, $brightness")
-        // TODO: logic to connect to API here!
-
-        GlobalScope.launch {
-            val response = ApiClient.retrofit.searchPlants(latitude, longitude, brightness)
-
-            Log.d("debug", response.toString())
-
-            if (response.isSuccessful && response.body() != null) {
-                Log.d("debug", response.body().toString())
-                plants = response.body()!!
-            } else {
-                Log.d("debug", response.errorBody().toString())
-            }
-
-//            val response2 = ApiClient.retrofit.saveSearch("testUser", Search(longitude, latitude, brightness)).await()
-//
-//            Log.d("debug", response2.toString())
-
-            // Code to execute after the delay
-            waitingResponse = false
-        }
-
-        return "OK"
-    }
-
     // Function to start location updates
-    @RequiresPermission(android.Manifest.permission.ACCESS_COARSE_LOCATION)
+    @RequiresPermission(Manifest.permission.ACCESS_COARSE_LOCATION)
     override fun onResume() {
         super.onResume()
         // Start listening for location updates when the activity resumes
@@ -134,16 +97,24 @@ class MainActivity : ComponentActivity() {
                         brightness = brightness,
                         location = locationString,
                         locationFound = locationFound,
-                        queryFun = ::queryFun,
                         waitingResponse = waitingResponse,
                         onNavigateToPlantsListPage = {
                             navController.navigate(Route.PlantList)
-                        }
+                        },
+                        onNavigateToSavedListPage = {
+                            navController.navigate((Route.SavedList))
+                        },
                     ) }
                     composable<Route.PlantList> { PlantListScreen(
-                        plants,
+                        latitude = latitude,
+                        longitude = longitude,
+                        brightness = brightness,
                         onNavigateToSomething = {}
                     ) }
+//                    composable<Route.SavedList> { SavedListScreen(
+//
+//                        onNavigateToSomething = {}
+//                    ) }
                     composable<Route.SignIn> { SignInScreen(navController, auth) }
                     composable<Route.SignUp> { SignUpScreen(navController, auth) }
                     // Add more destinations similarly.

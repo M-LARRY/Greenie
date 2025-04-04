@@ -55,10 +55,10 @@ fun SignUpScreen(nav: NavHostController, auth: FirebaseAuth) {
         verticalArrangement = Arrangement.Center
     ) {
         Text(
-            text = "greeanie",
+            text = "greenie",
             fontSize = 36.sp,
             fontWeight = FontWeight.Bold,
-            color = Color(0xFF4CAF50), // Green color for "greeanie"
+            color = Color(0xFF4CAF50), // Green color for "greenie"
             modifier = Modifier.padding(bottom = 48.dp)
         )
 
