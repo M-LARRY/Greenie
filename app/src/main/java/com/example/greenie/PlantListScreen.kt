@@ -103,6 +103,7 @@ fun PlantListScreen (
                                     ApiClient.retrofit.saveSearch(
                                         "pippo",
                                         Search(
+                                            name = "test-search",
                                             lng = longitude,
                                             lat = latitude,
                                             brightness = brightness

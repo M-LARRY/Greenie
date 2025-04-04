@@ -57,7 +57,7 @@ fun SavedListScreen (
         }
         //DEBUG-----
         searchesQueryState = try {
-            SearchesQueryState.Success(ApiClient.retrofit.getSearches("userId"))
+            SearchesQueryState.Success(ApiClient.retrofit.getSearches("pippo"))
         } catch (e: Exception) {
             SearchesQueryState.Error(e.message ?: "Unknown error")
         }
@@ -153,6 +153,10 @@ fun SearchItem(
     ) {
         Column {
             Text(
+                search.name,
+                modifier = Modifier.padding(paddingValues = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 8.dp))
+            )
+            Text(
                 search.lat.toString(),
                 modifier = Modifier.padding(paddingValues = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 8.dp))
             )
@@ -171,16 +175,19 @@ fun SearchItem(
 fun debugOfflineSearches() : List<Search> {
     val searches = listOf(
         Search(
+            name = "test-search-1",
             lat = 41.0,
             lng = 42.0,
             brightness = 5000f
         ),
         Search(
+            name = "test-search-2",
             lat = 141.0,
             lng = 142.0,
             brightness = 8000f
         ),
         Search(
+            name = "test-search-3",
             lat = 41.0,
             lng = 42.0,
             brightness = 5000f
