@@ -3,6 +3,7 @@ package com.example.greenie
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -44,10 +45,13 @@ sealed interface SearchesQueryState {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SavedListScreen (
-    onNavigateToSomething: () -> Unit
+    onNavigateToSearch: (Double, Double, Float) -> Unit
 ) {
     var searchesQueryState by remember { mutableStateOf<SearchesQueryState>(SearchesQueryState.Loading) }
 
+    var searches = listOf<Search>()
+
+    // Carica i dati qui dentro ------------------
     LaunchedEffect(Unit) {
         searchesQueryState = try {
             SearchesQueryState.Success(ApiClient.retrofit.getSearches("userId"))
@@ -55,6 +59,7 @@ fun SavedListScreen (
             SearchesQueryState.Error(e.message ?: "Unknown error")
         }
     }
+    // ------------------
 
     GreenieTheme {
         val scrollBehavior =
@@ -85,7 +90,7 @@ fun SavedListScreen (
                 )
             },
         ) {
-            innerPadding ->
+                innerPadding ->
             Column(modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)) {
@@ -99,8 +104,9 @@ fun SavedListScreen (
                         }
                     is SearchesQueryState.Success -> {
                         val searches = (searchesQueryState as SearchesQueryState.Success).searches
-                        SavedList(
+                        SearchesList(
                             searches = searches,
+                            onClick = onNavigateToSearch
                         )
                     }
                     is SearchesQueryState.Error -> {
@@ -113,52 +119,70 @@ fun SavedListScreen (
     }
 }
 
-
 @Composable
-fun SavedList(
-    searches: List<Search>
+fun SearchesList(
+    searches: List<Search>,
+    onClick: (Double, Double, Float) -> Unit
 ) {
     LazyVerticalGrid(
         GridCells.Adaptive(minSize = 192.dp),
         modifier = Modifier.padding(8.dp)
-    ) {
-        items(searches.size) {
-            for (search in searches) {
-                SavedItem(search = search)
-            }
+    )  {
+        items(searches.size) { index ->
+            SearchItem(search = searches[index], onClick = onClick)
         }
     }
 }
 
 @Composable
-fun SavedItem(
+fun SearchItem(
     search: Search,
+    onClick: (Double, Double, Float) -> Unit,
 ) {
     Card (
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant,
         ),
         modifier = Modifier.padding(4.dp),
+        onClick = {
+            onClick(search.lat, search.lng, search.brightness)
+        },
     ) {
-        Column (
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
+        Column {
             Text(
                 search.lat.toString(),
-                modifier = Modifier.padding(16.dp),
-                style = MaterialTheme.typography.headlineSmall,
+                modifier = Modifier.padding(paddingValues = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 8.dp))
             )
             Text(
                 search.lng.toString(),
-                modifier = Modifier.padding(16.dp),
-                style = MaterialTheme.typography.headlineSmall,
+                modifier = Modifier.padding(paddingValues = PaddingValues(horizontal = 16.dp))
             )
             Text(
                 search.brightness.toString(),
-                modifier = Modifier.padding(16.dp),
-                style = MaterialTheme.typography.headlineSmall,
+                modifier = Modifier.padding(paddingValues = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp))
             )
         }
     }
 }
+
+fun debugOfflineSearches() : List<Search> {
+    val searches = listOf(
+        Search(
+            lat = 41.0,
+            lng = 42.0,
+            brightness = 5000f
+        ),
+        Search(
+            lat = 141.0,
+            lng = 142.0,
+            brightness = 8000f
+        ),
+        Search(
+            lat = 41.0,
+            lng = 42.0,
+            brightness = 5000f
+        ),
+    )
+    return searches
+}
+

@@ -17,6 +17,7 @@ import androidx.core.content.ContextCompat
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
 import com.example.greenie.navigation.Route
 import com.example.greenie.ui.theme.GreenieTheme
 import com.google.firebase.auth.FirebaseAuth
@@ -97,20 +98,34 @@ class MainActivity : ComponentActivity() {
                         location = locationString,
                         locationFound = locationFound,
                         onNavigateToPlantsListPage = {
-                            navController.navigate(Route.PlantList)
+                            navController.navigate(Route.PlantList(
+                                lat = latitude.toFloat(),
+                                lng = longitude.toFloat(),
+                                brightness = brightness
+                            ))
                         },
                         onNavigateToSavedListPage = {
-                            navController.navigate((Route.SavedList))
+                            navController.navigate(Route.SavedList)
                         },
                     ) }
-                    composable<Route.PlantList> { PlantListScreen(
-                        latitude = latitude,
-                        longitude = longitude,
-                        brightness = brightness,
-                        onNavigateToSomething = {}
-                    ) }
+                    composable<Route.PlantList> { backStackEntry ->
+                        val plantList: Route.PlantList = backStackEntry.toRoute()
+                        PlantListScreen(
+                            latitude = plantList.lat.toDouble(),
+                            longitude = plantList.lng.toDouble(),
+                            brightness = plantList.brightness,
+                            onNavigateToSomething = {}
+                        )
+                    }
                     composable<Route.SavedList> { SavedListScreen(
-                        onNavigateToSomething = {}
+                        onNavigateToSearch = { latitude: Double, longitude: Double, brightness: Float ->
+                            navController.navigate(Route.PlantList(
+                                lat = latitude.toFloat(),
+                                lng = longitude.toFloat(),
+                                brightness = brightness,
+                                )
+                            )
+                        }
                     ) }
                     composable<Route.SignIn> { SignInScreen(navController, auth) }
                     composable<Route.SignUp> { SignUpScreen(navController, auth) }

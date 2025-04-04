@@ -1,5 +1,6 @@
 package com.example.greenie
 
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -9,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -27,6 +29,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -35,7 +38,9 @@ import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.example.greenie.model.Plant
 import com.example.greenie.network.ApiClient
+import com.example.greenie.model.Search
 import com.example.greenie.ui.theme.GreenieTheme
+import kotlinx.coroutines.launch
 
 sealed interface PlantsQueryState {
     data class Success(val plants: List<Plant>) : PlantsQueryState
@@ -53,6 +58,12 @@ fun PlantListScreen (
 ) {
     var plantsQueryState by remember { mutableStateOf<PlantsQueryState>(PlantsQueryState.Loading) }
 
+    val scope = rememberCoroutineScope()
+
+    var loading by remember { mutableStateOf(true) }
+    var plants = listOf<Plant>()
+
+    // Carica i dati qui dentro ------------------
     LaunchedEffect(Unit) {
         //DEBUG-----
         if (false) {
@@ -67,6 +78,7 @@ fun PlantListScreen (
             PlantsQueryState.Error(e.message ?: "Unknown error")
         }
     }
+    // ------------------
 
     GreenieTheme {
         val scrollBehavior =
@@ -123,7 +135,7 @@ fun PlantListScreen (
             }
         }
     }
-    }
+}
 
 
 @Composable
@@ -133,11 +145,9 @@ fun PlantsList(
     LazyVerticalGrid(
         GridCells.Adaptive(minSize = 192.dp),
         modifier = Modifier.padding(8.dp)
-    ) {
-        items(plants.size) {
-            for (plant in plants) {
-                PlantItem(plant = plant)
-            }
+    )  {
+        items(plants.size) { index ->
+            PlantItem(plant = plants[index])
         }
     }
 }
@@ -189,25 +199,7 @@ fun debugOfflinePlants() : List<Plant> {
             nations = listOf("Italy", "India")
         ),
         Plant(
-            name = "Potato",
-            description = "Boil em, mash em, stick em in a stew",
-            imgUrl = imgUrl,
-            nations = listOf("Italy", "India")
-        ),
-        Plant(
-            name = "Potato",
-            description = "Boil em, mash em, stick em in a stew",
-            imgUrl = imgUrl,
-            nations = listOf("Italy", "India")
-        ),
-        Plant(
-            name = "Potato",
-            description = "Boil em, mash em, stick em in a stew",
-            imgUrl = imgUrl,
-            nations = listOf("Italy", "India")
-        ),
-        Plant(
-            name = "Potato",
+            name = "AAAAAAAAAAAAAAA",
             description = "Boil em, mash em, stick em in a stew",
             imgUrl = imgUrl,
             nations = listOf("Italy", "India")
