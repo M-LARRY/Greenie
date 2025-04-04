@@ -34,7 +34,14 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.example.greenie.model.Plant
+import com.example.greenie.network.ApiClient
 import com.example.greenie.ui.theme.GreenieTheme
+
+sealed interface PlantsQueryState {
+    data class Success(val plants: List<Plant>) : PlantsQueryState
+    data class Error(val message: String) : PlantsQueryState
+    data object Loading : PlantsQueryState
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -44,28 +51,22 @@ fun PlantListScreen (
     brightness: Float,
     onNavigateToSomething: () -> Unit
 ) {
+    var plantsQueryState by remember { mutableStateOf<PlantsQueryState>(PlantsQueryState.Loading) }
 
-    var loading by remember { mutableStateOf(true) }
-    var plants = listOf<Plant>()
-
-    // Carica i dati qui dentro ------------------
     LaunchedEffect(Unit) {
         //DEBUG-----
-        plants = debugOfflinePlants() // DEBUG
-        //-----
-//        val response = ApiClient.retrofit.searchPlants(latitude, longitude, brightness)
-//
-//        Log.d("debug", response.toString())
-//
-//        if (response.isSuccessful && response.body() != null) {
-//            Log.d("debug", response.body().toString())
-//            plants = response.body()!!
-//        } else {
-//            Log.d("debug", response.errorBody().toString())
-//        }
-        loading = false // <-  RIGA IMPORTANTISSIMA
+        if (false) {
+            plantsQueryState = PlantsQueryState.Success(debugOfflinePlants())
+            return@LaunchedEffect
+        }
+        //DEBUG-----
+
+        plantsQueryState = try {
+            PlantsQueryState.Success(ApiClient.retrofit.searchPlants(latitude, longitude, brightness))
+        } catch (e: Exception) {
+            PlantsQueryState.Error(e.message ?: "Unknown error")
+        }
     }
-    // ------------------
 
     GreenieTheme {
         val scrollBehavior =
@@ -100,10 +101,25 @@ fun PlantListScreen (
             Column(modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)) {
-                PlantsList(
-                    plants = plants,
-                    loading = loading
-                )
+                when (plantsQueryState) {
+                    is PlantsQueryState.Loading ->
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator()
+                        }
+                    is PlantsQueryState.Success -> {
+                        val plants = (plantsQueryState as PlantsQueryState.Success).plants
+                        PlantsList(
+                            plants = plants,
+                        )
+                    }
+                    is PlantsQueryState.Error -> {
+                        val message = (plantsQueryState as PlantsQueryState.Error).message
+                        Text(text = "Error: ${message}")
+                    }
+                }
             }
         }
     }
@@ -112,31 +128,18 @@ fun PlantListScreen (
 
 @Composable
 fun PlantsList(
-    plants: List<Plant>,
-    loading: Boolean
+    plants : List<Plant>
 ) {
-    if (loading) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            CircularProgressIndicator()
-        }
-
-    }
-    else {
-        LazyVerticalGrid(
-            GridCells.Adaptive(minSize = 192.dp),
-            modifier = Modifier.padding(8.dp)
-        )  {
-            items(plants.size) {
-                for (plant in plants) {
-                    PlantItem(plant = plant)
-                }
+    LazyVerticalGrid(
+        GridCells.Adaptive(minSize = 192.dp),
+        modifier = Modifier.padding(8.dp)
+    ) {
+        items(plants.size) {
+            for (plant in plants) {
+                PlantItem(plant = plant)
             }
         }
     }
-
 }
 
 @Composable
