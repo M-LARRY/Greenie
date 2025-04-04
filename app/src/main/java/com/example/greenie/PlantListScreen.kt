@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.MoreVert
@@ -49,7 +50,7 @@ sealed interface PlantsQueryState {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PlantListScreen (
+fun PlantListScreen(
     latitude: Double,
     longitude: Double,
     brightness: Float,
@@ -59,25 +60,26 @@ fun PlantListScreen (
 
     val scope = rememberCoroutineScope()
 
-    var loading by remember { mutableStateOf(true) }
-    var plants = listOf<Plant>()
-
-    // Carica i dati qui dentro ------------------
     LaunchedEffect(Unit) {
         //DEBUG-----
-        if (true) {
+        if (false) {
             plantsQueryState = PlantsQueryState.Success(debugOfflinePlants())
             return@LaunchedEffect
         }
         //DEBUG-----
 
         plantsQueryState = try {
-            PlantsQueryState.Success(ApiClient.retrofit.searchPlants(latitude, longitude, brightness))
+            PlantsQueryState.Success(
+                ApiClient.retrofit.searchPlants(
+                    latitude,
+                    longitude,
+                    brightness
+                )
+            )
         } catch (e: Exception) {
             PlantsQueryState.Error(e.message ?: "Unknown error")
         }
     }
-    // ------------------
 
     GreenieTheme {
         val scrollBehavior =
@@ -127,11 +129,12 @@ fun PlantListScreen (
                     scrollBehavior = scrollBehavior
                 )
             },
-        ) {
-            innerPadding ->
-            Column(modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)) {
+        ) { innerPadding ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+            ) {
                 when (plantsQueryState) {
                     is PlantsQueryState.Loading ->
                         Box(
@@ -140,12 +143,14 @@ fun PlantListScreen (
                         ) {
                             CircularProgressIndicator()
                         }
+
                     is PlantsQueryState.Success -> {
                         val plants = (plantsQueryState as PlantsQueryState.Success).plants
                         PlantsList(
                             plants = plants,
                         )
                     }
+
                     is PlantsQueryState.Error -> {
                         val message = (plantsQueryState as PlantsQueryState.Error).message
                         Text(text = "Error: $message")
@@ -159,14 +164,14 @@ fun PlantListScreen (
 
 @Composable
 fun PlantsList(
-    plants : List<Plant>
+    plants: List<Plant>
 ) {
     LazyVerticalGrid(
         GridCells.Adaptive(minSize = 192.dp),
         modifier = Modifier.padding(8.dp)
-    )  {
-        items(plants.size) { index ->
-            PlantItem(plant = plants[index])
+    ) {
+        items(plants) { plant ->
+            PlantItem(plant = plant)
         }
     }
 }
@@ -175,13 +180,13 @@ fun PlantsList(
 fun PlantItem(
     plant: Plant,
 ) {
-    Card (
+    Card(
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant,
         ),
         modifier = Modifier.padding(4.dp),
     ) {
-        Column (
+        Column(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -196,14 +201,22 @@ fun PlantItem(
             )
             Text(
                 plant.description,
-                modifier = Modifier.padding(paddingValues = PaddingValues(start = 16.dp, end = 16.dp, top = 0.dp, bottom = 16.dp))
+                modifier = Modifier.padding(
+                    paddingValues = PaddingValues(
+                        start = 16.dp,
+                        end = 16.dp,
+                        top = 0.dp,
+                        bottom = 16.dp
+                    )
+                )
             )
         }
     }
 }
 
-fun debugOfflinePlants() : List<Plant> {
-    val imgUrl = "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fi.redd.it%2Fqi0r0pdbsgs31.jpg&f=1&nofb=1&ipt=5f8a4ee80e9c5a811382aa23493afb3d421ff40148b491426cc07051508d37a5&ipo=images"
+fun debugOfflinePlants(): List<Plant> {
+    val imgUrl =
+        "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fi.redd.it%2Fqi0r0pdbsgs31.jpg&f=1&nofb=1&ipt=5f8a4ee80e9c5a811382aa23493afb3d421ff40148b491426cc07051508d37a5&ipo=images"
     val plants = listOf(
         Plant(
             name = "Potato",

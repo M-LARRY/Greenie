@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Card
@@ -43,26 +44,25 @@ sealed interface SearchesQueryState {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SavedListScreen (
+fun SavedListScreen(
     onNavigateToSearch: (Double, Double, Float) -> Unit
 ) {
     var searchesQueryState by remember { mutableStateOf<SearchesQueryState>(SearchesQueryState.Loading) }
 
-    // Carica i dati qui dentro ------------------
     LaunchedEffect(Unit) {
         //DEBUG-----
-        if (true) {
+        if (false) {
             searchesQueryState = SearchesQueryState.Success(debugOfflineSearches())
             return@LaunchedEffect
         }
         //DEBUG-----
+
         searchesQueryState = try {
             SearchesQueryState.Success(ApiClient.retrofit.getSearches("pippo"))
         } catch (e: Exception) {
             SearchesQueryState.Error(e.message ?: "Unknown error")
         }
     }
-    // ------------------
 
     GreenieTheme {
         val scrollBehavior =
@@ -92,11 +92,12 @@ fun SavedListScreen (
                     scrollBehavior = scrollBehavior
                 )
             },
-        ) {
-                innerPadding ->
-            Column(modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)) {
+        ) { innerPadding ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+            ) {
                 when (searchesQueryState) {
                     is SearchesQueryState.Loading ->
                         Box(
@@ -105,6 +106,7 @@ fun SavedListScreen (
                         ) {
                             CircularProgressIndicator()
                         }
+
                     is SearchesQueryState.Success -> {
                         val searches = (searchesQueryState as SearchesQueryState.Success).searches
                         SearchesList(
@@ -112,6 +114,7 @@ fun SavedListScreen (
                             onClick = onNavigateToSearch
                         )
                     }
+
                     is SearchesQueryState.Error -> {
                         val message = (searchesQueryState as SearchesQueryState.Error).message
                         Text(text = "Error: $message")
@@ -130,9 +133,9 @@ fun SearchesList(
     LazyVerticalGrid(
         GridCells.Adaptive(minSize = 192.dp),
         modifier = Modifier.padding(8.dp)
-    )  {
-        items(searches.size) { index ->
-            SearchItem(search = searches[index], onClick = onClick)
+    ) {
+        items(searches) { search ->
+            SearchItem(search = search, onClick = onClick)
         }
     }
 }
@@ -142,7 +145,7 @@ fun SearchItem(
     search: Search,
     onClick: (Double, Double, Float) -> Unit,
 ) {
-    Card (
+    Card(
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant,
         ),
@@ -154,11 +157,25 @@ fun SearchItem(
         Column {
             Text(
                 search.name,
-                modifier = Modifier.padding(paddingValues = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 8.dp))
+                modifier = Modifier.padding(
+                    paddingValues = PaddingValues(
+                        start = 16.dp,
+                        end = 16.dp,
+                        top = 16.dp,
+                        bottom = 8.dp
+                    )
+                )
             )
             Text(
                 search.lat.toString(),
-                modifier = Modifier.padding(paddingValues = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 8.dp))
+                modifier = Modifier.padding(
+                    paddingValues = PaddingValues(
+                        start = 16.dp,
+                        end = 16.dp,
+                        top = 16.dp,
+                        bottom = 8.dp
+                    )
+                )
             )
             Text(
                 search.lng.toString(),
@@ -166,13 +183,20 @@ fun SearchItem(
             )
             Text(
                 search.brightness.toString(),
-                modifier = Modifier.padding(paddingValues = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp))
+                modifier = Modifier.padding(
+                    paddingValues = PaddingValues(
+                        start = 16.dp,
+                        end = 16.dp,
+                        top = 8.dp,
+                        bottom = 16.dp
+                    )
+                )
             )
         }
     }
 }
 
-fun debugOfflineSearches() : List<Search> {
+fun debugOfflineSearches(): List<Search> {
     val searches = listOf(
         Search(
             name = "test-search-1",
@@ -195,4 +219,3 @@ fun debugOfflineSearches() : List<Search> {
     )
     return searches
 }
-
