@@ -99,30 +99,15 @@ fun HomeScreen(
 }
 
 @Composable
-fun BarChart(value: Float = 100f) {
-    var maxValue = 7000f
-    var barLength = 0f
-    barLength = if (value < maxValue){
-        (value / maxValue)
-    }
-    else {
-        1f
-    }
-    var level = ""
-    level = if (value < 500){
-        "Dark"
-    }
-    else if (value < 1500){
-        "Shade"
-    }
-    else if (value < 3000){
-        "Half-Shade"
-    }
-    else if (value < 6000){
-        "Partial Sun"
-    }
-    else {
-        "Full Sun"
+fun BarChart(value: Float = 100f, maxValue : Float = 7000f) {
+    val barLength = (value / maxValue).coerceIn(0f, 1f)
+
+    val level = when {
+        value < 500 -> "Dark"
+        value < 1500 -> "Shade"
+        value < 3000 -> "Half-Shade"
+        value < 6000 -> "Partial Sun"
+        else -> "Full Sun"
     }
 
     Column(
@@ -170,7 +155,7 @@ fun LocationElement(
     location: String,
     locationFound: Boolean,
 ) {
-    if (locationFound == true) {
+    if (locationFound) {
         Text("Current location:\n $location")
     }
     else {

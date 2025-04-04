@@ -117,7 +117,7 @@ fun PlantListScreen (
                     }
                     is PlantsQueryState.Error -> {
                         val message = (plantsQueryState as PlantsQueryState.Error).message
-                        Text(text = "Error: ${message}")
+                        Text(text = "Error: $message")
                     }
                 }
             }

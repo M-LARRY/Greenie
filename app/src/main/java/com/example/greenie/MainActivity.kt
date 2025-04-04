@@ -39,7 +39,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var auth: FirebaseAuth
 
     // Function to request coarse location permission
-    fun requestCoarseLocationPermission() {
+    private fun requestCoarseLocationPermission() {
         // Check if the permission has already been granted
         if (ContextCompat.checkSelfPermission(this,
                 Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -52,7 +52,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    fun determineLocation(latitude: Double, longitude: Double) : String{
+    private fun determineLocation(latitude: Double, longitude: Double) : String{
         return latitude.toString() + longitude.toString()
     }
 
@@ -73,7 +73,7 @@ class MainActivity : ComponentActivity() {
 
     // onCreate function to initialize the activity
     override fun onCreate(savedInstanceState: Bundle?) {
-        auth = Firebase.auth;
+        auth = Firebase.auth
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         requestCoarseLocationPermission()

@@ -105,7 +105,7 @@ fun SavedListScreen (
                     }
                     is SearchesQueryState.Error -> {
                         val message = (searchesQueryState as SearchesQueryState.Error).message
-                        Text(text = "Error: ${message}")
+                        Text(text = "Error: $message")
                     }
                 }
             }
