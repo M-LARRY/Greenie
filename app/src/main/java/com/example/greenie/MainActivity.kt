@@ -32,7 +32,6 @@ class MainActivity : ComponentActivity() {
     private var brightness by mutableFloatStateOf(0f) // Store brightness as a float
     private var locationString by mutableStateOf("")
     private var locationFound by mutableStateOf(false)
-    private var waitingResponse by mutableStateOf(false)
 
     // Private variable to handle location updates
     private lateinit var locationHelper: LocationHelper
@@ -97,7 +96,6 @@ class MainActivity : ComponentActivity() {
                         brightness = brightness,
                         location = locationString,
                         locationFound = locationFound,
-                        waitingResponse = waitingResponse,
                         onNavigateToPlantsListPage = {
                             navController.navigate(Route.PlantList)
                         },
@@ -111,10 +109,9 @@ class MainActivity : ComponentActivity() {
                         brightness = brightness,
                         onNavigateToSomething = {}
                     ) }
-//                    composable<Route.SavedList> { SavedListScreen(
-//
-//                        onNavigateToSomething = {}
-//                    ) }
+                    composable<Route.SavedList> { SavedListScreen(
+                        onNavigateToSomething = {}
+                    ) }
                     composable<Route.SignIn> { SignInScreen(navController, auth) }
                     composable<Route.SignUp> { SignUpScreen(navController, auth) }
                     // Add more destinations similarly.

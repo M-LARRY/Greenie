@@ -17,7 +17,6 @@ import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
@@ -41,7 +40,6 @@ fun HomeScreen(
     brightness: Float,
     location: String,
     locationFound: Boolean,
-    waitingResponse: Boolean,
     onNavigateToPlantsListPage: () -> Unit,
     onNavigateToSavedListPage: () -> Unit
 ) {
@@ -88,11 +86,14 @@ fun HomeScreen(
                 location = location,
                 locationFound = locationFound,
             )
-            QueryButton(
-                enabled = true,
-                waitingResponse = waitingResponse,
-                onNavigateToPlantsListPage = onNavigateToPlantsListPage,
-            )
+            Button(
+                onClick = onNavigateToPlantsListPage,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+            ) {
+                Text("Find compatible plants!")
+            }
         }
     }
 }
@@ -137,7 +138,6 @@ fun BarChart(value: Float = 100f) {
             )
             Text(
                 text = level,
-//                modifier = Modifier.padding(8.dp),
                 style = MaterialTheme.typography.headlineMedium
             )
         }
@@ -179,41 +179,6 @@ fun LocationElement(
 }
 
 @Composable
-fun QueryButton(
-    enabled: Boolean,
-    waitingResponse: Boolean,
-    onNavigateToPlantsListPage: () -> Unit,
-) {
-
-    fun onClick() {
-        onNavigateToPlantsListPage()
-    }
-
-    if (waitingResponse) {
-        Button(
-            onClick = {},
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            enabled = enabled
-        ) {
-            Text("Loading...")
-        }
-    }
-    else {
-        Button(
-            onClick = { onClick() },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            enabled = enabled
-        ) {
-            Text("Find compatible plants!")
-        }
-    }
-}
-
-@Composable
 fun SensorPanel(
     brightness: Float,
     location: String,
@@ -222,7 +187,6 @@ fun SensorPanel(
     Column (modifier = Modifier.padding(all = 16.dp)) {
         BarChart(value = brightness)
         LocationElement(location = location, locationFound = locationFound)
-        HorizontalDivider(thickness = 16.dp, color = Color(0x00000000))
     }
 }
 
