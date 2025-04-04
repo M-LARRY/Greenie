@@ -26,7 +26,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -38,7 +37,7 @@ import com.example.greenie.ui.theme.GreenieTheme
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SavedListScreen (
-    onNavigateToSearch: () -> Unit
+    onNavigateToSearch: (Double, Double, Float) -> Unit
 ) {
 
     var loading by remember { mutableStateOf(true) }
@@ -98,7 +97,8 @@ fun SavedListScreen (
                 .padding(innerPadding)) {
                 SearchesList(
                     searches = searches,
-                    loading = loading
+                    loading = loading,
+                    onClick = onNavigateToSearch
                 )
             }
         }
@@ -109,7 +109,8 @@ fun SavedListScreen (
 @Composable
 fun SearchesList(
     searches: List<Search>,
-    loading: Boolean
+    loading: Boolean,
+    onClick: (Double, Double, Float) -> Unit
 ) {
     if (loading) {
         Box(
@@ -124,10 +125,8 @@ fun SearchesList(
             GridCells.Adaptive(minSize = 192.dp),
             modifier = Modifier.padding(8.dp)
         )  {
-            items(searches.size) {
-                for (search in searches) {
-                    SearchItem(search = search)
-                }
+            items(searches.size) { index ->
+                    SearchItem(search = searches[index], onClick = onClick)
             }
         }
     }
@@ -136,17 +135,15 @@ fun SearchesList(
 @Composable
 fun SearchItem(
     search: Search,
+    onClick: (Double, Double, Float) -> Unit,
 ) {
-
-    val scope = rememberCoroutineScope()
-
     Card (
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant,
         ),
         modifier = Modifier.padding(4.dp),
         onClick = {
-
+            onClick(search.lat, search.lng, search.brightness)
         },
     ) {
         Column {
@@ -174,14 +171,9 @@ fun debugOfflineSearches() : List<Search> {
             brightness = 5000f
         ),
         Search(
-            lat = 41.0,
-            lng = 42.0,
-            brightness = 5000f
-        ),
-        Search(
-            lat = 41.0,
-            lng = 42.0,
-            brightness = 5000f
+            lat = 141.0,
+            lng = 142.0,
+            brightness = 8000f
         ),
         Search(
             lat = 41.0,

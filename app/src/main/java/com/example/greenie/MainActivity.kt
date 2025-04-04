@@ -98,7 +98,11 @@ class MainActivity : ComponentActivity() {
                         location = locationString,
                         locationFound = locationFound,
                         onNavigateToPlantsListPage = {
-                            navController.navigate(Route.PlantList(latitude, longitude, brightness))
+                            navController.navigate(Route.PlantList(
+                                lat = latitude.toFloat(),
+                                lng = longitude.toFloat(),
+                                brightness = brightness
+                            ))
                         },
                         onNavigateToSavedListPage = {
                             navController.navigate(Route.SavedList)
@@ -107,15 +111,20 @@ class MainActivity : ComponentActivity() {
                     composable<Route.PlantList> { backStackEntry ->
                         val plantList: Route.PlantList = backStackEntry.toRoute()
                         PlantListScreen(
-                            latitude = plantList.lat,
-                            longitude = plantList.lng,
+                            latitude = plantList.lat.toDouble(),
+                            longitude = plantList.lng.toDouble(),
                             brightness = plantList.brightness,
                             onNavigateToSomething = {}
                         )
                     }
                     composable<Route.SavedList> { SavedListScreen(
-                        onNavigateToSearch = {
-//                            navController.navigate(Route.PlantList)
+                        onNavigateToSearch = { latitude: Double, longitude: Double, brightness: Float ->
+                            navController.navigate(Route.PlantList(
+                                lat = latitude.toFloat(),
+                                lng = longitude.toFloat(),
+                                brightness = brightness,
+                                )
+                            )
                         }
                     ) }
                     composable<Route.SignIn> { SignInScreen(navController, auth) }

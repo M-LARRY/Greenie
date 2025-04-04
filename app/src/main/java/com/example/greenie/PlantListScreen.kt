@@ -1,5 +1,6 @@
 package com.example.greenie
 
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -58,7 +59,8 @@ fun PlantListScreen (
     // Carica i dati qui dentro ------------------
     LaunchedEffect(Unit) {
         //DEBUG-----
-//        plants = debugOfflinePlants() // DEBUG
+        plants = debugOfflinePlants() // DEBUG
+        Log.d("PARAMS", "lat: $latitude, long: $longitude, brightness: $brightness")
         //-----
 //        val response = ApiClient.retrofit.searchPlants(latitude, longitude, brightness)
 //
@@ -155,10 +157,8 @@ fun PlantsList(
             GridCells.Adaptive(minSize = 192.dp),
             modifier = Modifier.padding(8.dp)
         )  {
-            items(plants.size) {
-                for (plant in plants) {
-                    PlantItem(plant = plant)
-                }
+            items(plants.size) { index ->
+                PlantItem(plant = plants[index])
             }
         }
     }
@@ -211,29 +211,12 @@ fun debugOfflinePlants() : List<Plant> {
             nations = listOf("Italy", "India")
         ),
         Plant(
-            name = "Potato",
+            name = "AAAAAAAAAAAAAAA",
             description = "Boil em, mash em, stick em in a stew",
             imgUrl = imgUrl,
             nations = listOf("Italy", "India")
         ),
-        Plant(
-            name = "Potato",
-            description = "Boil em, mash em, stick em in a stew",
-            imgUrl = imgUrl,
-            nations = listOf("Italy", "India")
-        ),
-        Plant(
-            name = "Potato",
-            description = "Boil em, mash em, stick em in a stew",
-            imgUrl = imgUrl,
-            nations = listOf("Italy", "India")
-        ),
-        Plant(
-            name = "Potato",
-            description = "Boil em, mash em, stick em in a stew",
-            imgUrl = imgUrl,
-            nations = listOf("Italy", "India")
-        ),
+
     )
     return plants
 }

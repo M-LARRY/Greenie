@@ -7,7 +7,7 @@ sealed interface Route {
     object Home : Route
 
     @Serializable
-    data class PlantList(val lat: Double, val lng: Double, val brightness: Float) : Route
+    data class PlantList(val lat: Float, val lng: Float, val brightness: Float) : Route
 
     @Serializable
     object SavedList : Route
