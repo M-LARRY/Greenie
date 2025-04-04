@@ -1,6 +1,5 @@
 package com.example.greenie
 
-import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -37,8 +36,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.example.greenie.model.Plant
-import com.example.greenie.network.ApiClient
 import com.example.greenie.model.Search
+import com.example.greenie.network.ApiClient
 import com.example.greenie.ui.theme.GreenieTheme
 import kotlinx.coroutines.launch
 
@@ -66,7 +65,7 @@ fun PlantListScreen (
     // Carica i dati qui dentro ------------------
     LaunchedEffect(Unit) {
         //DEBUG-----
-        if (false) {
+        if (true) {
             plantsQueryState = PlantsQueryState.Success(debugOfflinePlants())
             return@LaunchedEffect
         }
@@ -98,6 +97,25 @@ fun PlantListScreen (
                         )
                     },
                     actions = {
+                        if (plantsQueryState != PlantsQueryState.Loading) {
+                            IconButton(onClick = {
+                                scope.launch {
+                                    ApiClient.retrofit.saveSearch(
+                                        "pippo",
+                                        Search(
+                                            lng = longitude,
+                                            lat = latitude,
+                                            brightness = brightness
+                                        )
+                                    )
+                                }
+                            }) {
+                                Icon(
+                                    imageVector = Icons.Filled.FavoriteBorder,
+                                    contentDescription = "Localized description"
+                                )
+                            }
+                        }
                         IconButton(onClick = { /* do something */ }) {
                             Icon(
                                 imageVector = Icons.Filled.MoreVert,

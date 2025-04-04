@@ -1,6 +1,5 @@
 package com.example.greenie
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -49,10 +48,14 @@ fun SavedListScreen (
 ) {
     var searchesQueryState by remember { mutableStateOf<SearchesQueryState>(SearchesQueryState.Loading) }
 
-    var searches = listOf<Search>()
-
     // Carica i dati qui dentro ------------------
     LaunchedEffect(Unit) {
+        //DEBUG-----
+        if (true) {
+            searchesQueryState = SearchesQueryState.Success(debugOfflineSearches())
+            return@LaunchedEffect
+        }
+        //DEBUG-----
         searchesQueryState = try {
             SearchesQueryState.Success(ApiClient.retrofit.getSearches("userId"))
         } catch (e: Exception) {
