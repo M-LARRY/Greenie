@@ -7,6 +7,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.annotation.RequiresPermission
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableFloatStateOf
@@ -19,6 +20,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.example.greenie.navigation.Route
+import com.example.greenie.network.ApiClient
 import com.example.greenie.ui.theme.GreenieTheme
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
@@ -53,10 +55,6 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun determineLocation(latitude: Double, longitude: Double) : String{
-        return latitude.toString() + longitude.toString()
-    }
-
     // Function to start location updates
     @RequiresPermission(Manifest.permission.ACCESS_COARSE_LOCATION)
     override fun onResume() {
@@ -81,12 +79,18 @@ class MainActivity : ComponentActivity() {
         locationHelper = LocationHelper(this) { location ->
             latitude = location.latitude
             longitude = location.longitude
-            locationString = determineLocation(latitude, longitude)
             locationFound = true
         }
 
         setContent {
             GreenieTheme {
+
+                LaunchedEffect(latitude, longitude) {
+                    val nations = ApiClient.retrofit.searchNations(latitude, longitude)
+                    if (nations.isNotEmpty()) {
+                        locationString = nations[0].name
+                    }
+                }
 
                 // Use rememberLightSensorValueAsState().value.value to get the brightness value
                 brightness = rememberLightSensorValueAsState().value.value
