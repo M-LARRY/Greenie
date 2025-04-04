@@ -1,5 +1,6 @@
 package com.example.greenie.network
 
+import com.example.greenie.model.Nation
 import com.example.greenie.model.Plant
 import com.example.greenie.model.Search
 import retrofit2.Response
@@ -15,6 +16,9 @@ interface ApiInterface {
 
     @GET("plants/search")
     suspend fun searchPlants(@Query("lat") lat : Double, @Query("lng") lng : Double, @Query("brightness") brightness : Float): Response<List<Plant>>
+
+    @GET("nations/search")
+    suspend fun searchNations(@Query("lat") lat : Double, @Query("lng") lng : Double): Response<List<Nation>>
 
     @GET("users/{userId}/searches")
     suspend fun getSearches(@Path("userId") userId : String): Response<List<Search>>
