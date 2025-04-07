@@ -2,6 +2,7 @@ package com.example.greenie
 
 import android.content.Context
 import android.net.Uri
+import android.util.Base64
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -52,9 +53,11 @@ import com.example.greenie.model.Search
 import com.example.greenie.network.ApiClient
 import com.example.greenie.ui.theme.GreenieTheme
 import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import java.io.File
+import java.io.InputStream
 import java.util.UUID
 
 sealed interface PlantsQueryState {
@@ -63,7 +66,22 @@ sealed interface PlantsQueryState {
     data object Loading : PlantsQueryState
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+fun Uri.toFile(context: Context): File? {
+    val inputStream = context.contentResolver.openInputStream(this)
+    val tempFile = File.createTempFile("temp", ".jpg")
+    return try {
+        tempFile.outputStream().use { fileOut ->
+            inputStream?.copyTo(fileOut)
+        }
+        tempFile.deleteOnExit()
+        inputStream?.close()
+        tempFile
+    } catch (e: Exception) {
+        null
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class, DelicateCoroutinesApi::class)
 @Composable
 fun PlantListScreen(
     auth : FirebaseAuth,
@@ -78,6 +96,8 @@ fun PlantListScreen(
     var pictureTaken by remember { mutableStateOf(false) }
     var imageUri by remember { mutableStateOf<Uri?>(null) }
 
+    val context: Context = LocalContext.current
+
     val takePictureLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture(),
         onResult = { success ->
@@ -89,8 +109,6 @@ fun PlantListScreen(
 
     val scope = rememberCoroutineScope()
 
-    val context: Context = LocalContext.current
-
     fun createImageFile(): File {
         // Create an image file in the app's cache directory
         val storageDir = File(context.cacheDir, "images")
@@ -98,6 +116,23 @@ fun PlantListScreen(
             storageDir.mkdirs()
         }
         return File.createTempFile("JPEG_${UUID.randomUUID()}_", ".jpg", storageDir)
+    }
+
+    var base64String = remember { "" }
+
+    // This function converts the URI to a Base64 string
+    fun convertUriToBase64(uri: Uri) {
+        val inputStream: InputStream? = context.contentResolver.openInputStream(uri)
+        if (inputStream != null) {
+            try {
+                val byteArray = inputStream.readBytes() // Convert InputStream to ByteArray
+                base64String = Base64.encodeToString(byteArray, Base64.NO_WRAP) // Convert ByteArray to Base64 string
+            } catch (e: Exception) {
+                e.printStackTrace() // Handle any exceptions
+            } finally {
+                inputStream.close() // Always close the InputStream
+            }
+        }
     }
 
     LaunchedEffect(Unit) {
@@ -218,6 +253,8 @@ fun PlantListScreen(
                     confirmButton = {
                         TextButton(
                             onClick = {
+                                convertUriToBase64(imageUri!!)
+                                Log.d("BASE64", base64String)
                                 showDialog = false
                                 scope.launch {
                                     ApiClient.retrofit.saveSearch(
@@ -227,7 +264,8 @@ fun PlantListScreen(
                                             name = textFieldValue,
                                             lng = longitude,
                                             lat = latitude,
-                                            brightness = brightness
+                                            brightness = brightness,
+                                            picture = base64String
                                         )
                                     )
                                 }

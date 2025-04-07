@@ -1,5 +1,6 @@
 package com.example.greenie
 
+import android.util.Base64
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -32,6 +33,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import coil3.compose.AsyncImage
 import com.example.greenie.model.Search
 import com.example.greenie.network.ApiClient
 import com.example.greenie.ui.theme.GreenieTheme
@@ -53,13 +55,6 @@ fun SavedListScreen(
     var searchesQueryState by remember { mutableStateOf<SearchesQueryState>(SearchesQueryState.Loading) }
 
     LaunchedEffect(Unit) {
-        //DEBUG-----
-        if (false) {
-            searchesQueryState = SearchesQueryState.Success(debugOfflineSearches())
-            return@LaunchedEffect
-        }
-        //DEBUG-----
-
         searchesQueryState = try {
             SearchesQueryState.Success(ApiClient.retrofit.getSearches(auth.currentUser!!.getIdToken(false).await().token!!, auth.currentUser!!.uid))
         } catch (e: Exception) {
@@ -158,6 +153,12 @@ fun SearchItem(
         },
     ) {
         Column {
+            if (search.picture != null){
+                AsyncImage(
+                    model = Base64.decode(search.picture, Base64.DEFAULT),
+                    contentDescription = ""
+                )
+            }
             Text(
                 search.name,
                 modifier = Modifier.padding(
@@ -197,28 +198,4 @@ fun SearchItem(
             )
         }
     }
-}
-
-fun debugOfflineSearches(): List<Search> {
-    val searches = listOf(
-        Search(
-            name = "test-search-1",
-            lat = 41.0,
-            lng = 42.0,
-            brightness = 5000f
-        ),
-        Search(
-            name = "test-search-2",
-            lat = 141.0,
-            lng = 142.0,
-            brightness = 8000f
-        ),
-        Search(
-            name = "test-search-3",
-            lat = 41.0,
-            lng = 42.0,
-            brightness = 5000f
-        ),
-    )
-    return searches
 }
