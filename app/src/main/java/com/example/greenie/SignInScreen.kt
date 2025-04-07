@@ -1,5 +1,6 @@
 package com.example.greenie
 
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -24,6 +25,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -33,9 +35,21 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat.getString
+import androidx.credentials.Credential
+import androidx.credentials.CredentialManager
+import androidx.credentials.CustomCredential
+import androidx.credentials.GetCredentialRequest
+import androidx.credentials.exceptions.GetCredentialException
 import androidx.navigation.NavHostController
 import com.example.greenie.navigation.Route
+import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential.Companion.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.GoogleAuthProvider
+import kotlinx.coroutines.launch
+
 
 @Composable
 fun SignInScreen(nav: NavHostController, auth: FirebaseAuth) {
@@ -44,6 +58,63 @@ fun SignInScreen(nav: NavHostController, auth: FirebaseAuth) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     val context = LocalContext.current
+
+    val coroutineScope = rememberCoroutineScope()
+
+    val credentialManager = CredentialManager.create(context)
+
+    val signInWithGoogleOption = GetSignInWithGoogleOption
+        .Builder(getString(context, R.string.default_web_client_id))
+        .build()
+
+    // Create the Credential Manager request
+    val request = GetCredentialRequest.Builder()
+        .addCredentialOption(signInWithGoogleOption)
+        .build()
+
+    suspend fun handleSignIn() {
+        val credential: Credential = try {
+            val result = credentialManager.getCredential(
+                context = context,
+                request = request
+            )
+
+            result.credential
+        } catch (e: GetCredentialException) {
+            Log.e("GOOGLE ERROR", "Couldn't retrieve user's credentials: ${e.localizedMessage}, ${e.type}")
+            return
+        }
+
+        if (credential !is CustomCredential || credential.type != TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
+            Log.w("GOOGLE AUTH", "Credential is not of type Google ID!")
+            return
+        }
+
+        val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
+
+        val cred = GoogleAuthProvider.getCredential(googleIdTokenCredential.idToken, null)
+
+        auth.signInWithCredential(cred)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    Toast.makeText(
+                        context,
+                        "Authentication successful.",
+                        Toast.LENGTH_SHORT
+                    ).show()
+
+                    nav.navigate(Route.Home) {
+                        popUpTo(Route.SignIn) { inclusive = true }
+                    }
+                } else {
+                    Toast.makeText(
+                        context,
+                        "Authentication failed: ${task.exception?.message}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+    }
 
     Column(
         modifier = Modifier
@@ -85,6 +156,7 @@ fun SignInScreen(nav: NavHostController, auth: FirebaseAuth) {
 
         // Login button
         Button(
+            enabled = email.isNotBlank() && password.isNotBlank(),
             onClick = {
                 auth.signInWithEmailAndPassword(email, password)
                     .addOnCompleteListener { task ->
@@ -127,7 +199,9 @@ fun SignInScreen(nav: NavHostController, auth: FirebaseAuth) {
         // Google Sign In button
         OutlinedButton(
             onClick = {
-                /* Google sign-in logic would go here */
+                coroutineScope.launch {
+                    handleSignIn()
+                }
             },
             modifier = Modifier
                 .fillMaxWidth()
