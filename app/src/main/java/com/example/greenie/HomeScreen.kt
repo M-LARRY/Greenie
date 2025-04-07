@@ -88,6 +88,7 @@ fun HomeScreen(
             )
             Button(
                 onClick = onNavigateToPlantsListPage,
+                enabled = locationFound,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp),
@@ -156,7 +157,7 @@ fun LocationElement(
     locationFound: Boolean,
 ) {
     if (locationFound) {
-        Text("Current location:\n $location")
+        Text("Current location:\n$location")
     }
     else {
         Text("Retrieving your current location...")

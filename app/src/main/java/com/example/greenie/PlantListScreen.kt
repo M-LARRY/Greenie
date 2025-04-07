@@ -1,5 +1,6 @@
 package com.example.greenie
 
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,6 +13,7 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -22,6 +24,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MediumTopAppBar
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
@@ -57,6 +61,8 @@ fun PlantListScreen(
     onNavigateToSomething: () -> Unit
 ) {
     var plantsQueryState by remember { mutableStateOf<PlantsQueryState>(PlantsQueryState.Loading) }
+    var showDialog by remember { mutableStateOf(false) }
+    var textFieldValue by remember { mutableStateOf("") }
 
     val scope = rememberCoroutineScope()
 
@@ -101,17 +107,7 @@ fun PlantListScreen(
                     actions = {
                         if (plantsQueryState != PlantsQueryState.Loading) {
                             IconButton(onClick = {
-                                scope.launch {
-                                    ApiClient.retrofit.saveSearch(
-                                        "pippo",
-                                        Search(
-                                            name = "test-search",
-                                            lng = longitude,
-                                            lat = latitude,
-                                            brightness = brightness
-                                        )
-                                    )
-                                }
+                                showDialog = true
                             }) {
                                 Icon(
                                     imageVector = Icons.Filled.FavoriteBorder,
@@ -157,6 +153,40 @@ fun PlantListScreen(
                     }
                 }
             }
+            if (showDialog) {
+                AlertDialog(
+                    onDismissRequest = {showDialog = false},
+                    title = { Text("Save this search") },
+                    text = {
+                        TextField(
+                            value = textFieldValue,
+                            onValueChange = { textFieldValue = it },
+                            label = { Text("Name for the search") },
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )},
+                    confirmButton = {
+                        TextButton(
+                            onClick = {
+                                showDialog = false
+                                Log.d("Debug", textFieldValue.toString())
+                                scope.launch {
+                                    ApiClient.retrofit.saveSearch(
+                                        "pippo",
+                                        Search(
+                                            name = textFieldValue,
+                                            lng = longitude,
+                                            lat = latitude,
+                                            brightness = brightness
+                                        )
+                                    )
+                                }
+                            }
+                        ) {
+                            Text("OK")
+                        }
+                    }
+                )
+            }
         }
     }
 }
@@ -180,6 +210,7 @@ fun PlantsList(
 fun PlantItem(
     plant: Plant,
 ) {
+    Log.d("RES", plant.imgUrl)
     Card(
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant,
