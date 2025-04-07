@@ -1,6 +1,10 @@
 package com.example.greenie
 
+import android.content.Context
+import android.net.Uri
 import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -37,9 +41,12 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.core.content.FileProvider
 import coil3.compose.AsyncImage
+import coil3.toCoilUri
 import com.example.greenie.model.Plant
 import com.example.greenie.model.Search
 import com.example.greenie.network.ApiClient
@@ -47,6 +54,8 @@ import com.example.greenie.ui.theme.GreenieTheme
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import java.io.File
+import java.util.UUID
 
 sealed interface PlantsQueryState {
     data class Success(val plants: List<Plant>) : PlantsQueryState
@@ -66,17 +75,32 @@ fun PlantListScreen(
     var plantsQueryState by remember { mutableStateOf<PlantsQueryState>(PlantsQueryState.Loading) }
     var showDialog by remember { mutableStateOf(false) }
     var textFieldValue by remember { mutableStateOf("") }
+    var pictureTaken by remember { mutableStateOf(false) }
+    var imageUri by remember { mutableStateOf<Uri?>(null) }
+
+    val takePictureLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture(),
+        onResult = { success ->
+            if (success) {
+                pictureTaken = true
+            }
+        }
+    )
 
     val scope = rememberCoroutineScope()
 
-    LaunchedEffect(Unit) {
-        //DEBUG-----
-        if (false) {
-            plantsQueryState = PlantsQueryState.Success(debugOfflinePlants())
-            return@LaunchedEffect
-        }
-        //DEBUG-----
+    val context: Context = LocalContext.current
 
+    fun createImageFile(): File {
+        // Create an image file in the app's cache directory
+        val storageDir = File(context.cacheDir, "images")
+        if (!storageDir.exists()) {
+            storageDir.mkdirs()
+        }
+        return File.createTempFile("JPEG_${UUID.randomUUID()}_", ".jpg", storageDir)
+    }
+
+    LaunchedEffect(Unit) {
         plantsQueryState = try {
             PlantsQueryState.Success(
                 ApiClient.retrofit.searchPlants(
@@ -162,17 +186,39 @@ fun PlantListScreen(
                     onDismissRequest = {showDialog = false},
                     title = { Text("Save this search") },
                     text = {
-                        TextField(
-                            value = textFieldValue,
-                            onValueChange = { textFieldValue = it },
-                            label = { Text("Name for the search") },
-                            modifier = Modifier.padding(bottom = 8.dp)
-                        )},
+                        Column {
+                            if (pictureTaken) {
+                                AsyncImage(
+                                    model = imageUri!!.toCoilUri(),
+                                    contentDescription = null
+                                )
+                            }
+                            TextButton(
+                                onClick = {
+                                    createImageFile().let { file ->
+                                        imageUri = FileProvider.getUriForFile(
+                                            context,
+                                            "com.example.greenie.fileprovider",
+                                            file
+                                        )
+                                        takePictureLauncher.launch(imageUri!!)
+                                    }
+                                },
+                            ) {
+                                Text("Take a picture")
+                            }
+                            TextField(
+                                value = textFieldValue,
+                                onValueChange = { textFieldValue = it },
+                                label = { Text("Name for the search") },
+                                modifier = Modifier.padding(bottom = 8.dp)
+                            )
+                        }
+                    },
                     confirmButton = {
                         TextButton(
                             onClick = {
                                 showDialog = false
-                                Log.d("Debug", textFieldValue.toString())
                                 scope.launch {
                                     ApiClient.retrofit.saveSearch(
                                         auth.currentUser!!.getIdToken(false).await().token!!,
@@ -248,30 +294,4 @@ fun PlantItem(
             )
         }
     }
-}
-
-fun debugOfflinePlants(): List<Plant> {
-    val imgUrl =
-        "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fi.redd.it%2Fqi0r0pdbsgs31.jpg&f=1&nofb=1&ipt=5f8a4ee80e9c5a811382aa23493afb3d421ff40148b491426cc07051508d37a5&ipo=images"
-    val plants = listOf(
-        Plant(
-            name = "Potato",
-            description = "Boil em, mash em, stick em in a stew",
-            imgUrl = imgUrl,
-            nations = listOf("Italy", "India")
-        ),
-        Plant(
-            name = "Potato",
-            description = "Boil em, mash em, stick em in a stew",
-            imgUrl = imgUrl,
-            nations = listOf("Italy", "India")
-        ),
-        Plant(
-            name = "AAAAAAAAAAAAAAA",
-            description = "Boil em, mash em, stick em in a stew",
-            imgUrl = imgUrl,
-            nations = listOf("Italy", "India")
-        ),
-    )
-    return plants
 }
