@@ -58,6 +58,8 @@ class MainActivity : ComponentActivity() {
             activityResultLauncher.launch(
                 arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION)
             )
+        } else {
+            hasLocationPermission = true
         }
     }
 
