@@ -44,7 +44,9 @@ import com.example.greenie.model.Plant
 import com.example.greenie.model.Search
 import com.example.greenie.network.ApiClient
 import com.example.greenie.ui.theme.GreenieTheme
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 sealed interface PlantsQueryState {
     data class Success(val plants: List<Plant>) : PlantsQueryState
@@ -55,6 +57,7 @@ sealed interface PlantsQueryState {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlantListScreen(
+    auth : FirebaseAuth,
     latitude: Double,
     longitude: Double,
     brightness: Float,
@@ -77,6 +80,7 @@ fun PlantListScreen(
         plantsQueryState = try {
             PlantsQueryState.Success(
                 ApiClient.retrofit.searchPlants(
+                    auth.currentUser!!.getIdToken(false).await().token!!,
                     latitude,
                     longitude,
                     brightness
@@ -171,7 +175,8 @@ fun PlantListScreen(
                                 Log.d("Debug", textFieldValue.toString())
                                 scope.launch {
                                     ApiClient.retrofit.saveSearch(
-                                        "pippo",
+                                        auth.currentUser!!.getIdToken(false).await().token!!,
+                                        auth.currentUser!!.uid,
                                         Search(
                                             name = textFieldValue,
                                             lng = longitude,

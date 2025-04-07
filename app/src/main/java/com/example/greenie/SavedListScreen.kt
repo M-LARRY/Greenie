@@ -35,6 +35,8 @@ import androidx.compose.ui.unit.dp
 import com.example.greenie.model.Search
 import com.example.greenie.network.ApiClient
 import com.example.greenie.ui.theme.GreenieTheme
+import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.tasks.await
 
 sealed interface SearchesQueryState {
     data class Success(val searches: List<Search>) : SearchesQueryState
@@ -45,6 +47,7 @@ sealed interface SearchesQueryState {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SavedListScreen(
+    auth : FirebaseAuth,
     onNavigateToSearch: (Double, Double, Float) -> Unit
 ) {
     var searchesQueryState by remember { mutableStateOf<SearchesQueryState>(SearchesQueryState.Loading) }
@@ -58,7 +61,7 @@ fun SavedListScreen(
         //DEBUG-----
 
         searchesQueryState = try {
-            SearchesQueryState.Success(ApiClient.retrofit.getSearches("pippo"))
+            SearchesQueryState.Success(ApiClient.retrofit.getSearches(auth.currentUser!!.getIdToken(false).await().token!!, auth.currentUser!!.uid))
         } catch (e: Exception) {
             SearchesQueryState.Error(e.message ?: "Unknown error")
         }

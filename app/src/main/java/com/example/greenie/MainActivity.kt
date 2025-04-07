@@ -26,6 +26,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import dev.ricknout.composesensors.light.rememberLightSensorValueAsState
+import kotlinx.coroutines.tasks.await
 
 class MainActivity : ComponentActivity() {
 
@@ -85,9 +86,11 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-                LaunchedEffect(location) {
+                LaunchedEffect(location, auth.currentUser) {
+                    if (auth.currentUser == null) return@LaunchedEffect
+
                     val nations =
-                        ApiClient.retrofit.searchNations(location.latitude, location.longitude)
+                        ApiClient.retrofit.searchNations(auth.currentUser!!.getIdToken(false).await().token!!, location.latitude, location.longitude)
                     if (nations.isNotEmpty()) {
                         locationString = nations[0].name
                     }
@@ -97,7 +100,9 @@ class MainActivity : ComponentActivity() {
                 brightness = rememberLightSensorValueAsState().value.value
                 val navController = rememberNavController()
 
-                NavHost(navController = navController, startDestination = Route.SignIn) {
+                val startDestination: Route = if (auth.currentUser != null) Route.Home else Route.SignIn
+
+                NavHost(navController = navController, startDestination = startDestination) {
                     composable<Route.Home> {
                         HomeScreen(
                             brightness = brightness,
@@ -120,6 +125,7 @@ class MainActivity : ComponentActivity() {
                     composable<Route.PlantList> { backStackEntry ->
                         val plantList: Route.PlantList = backStackEntry.toRoute()
                         PlantListScreen(
+                            auth = auth,
                             latitude = plantList.lat.toDouble(),
                             longitude = plantList.lng.toDouble(),
                             brightness = plantList.brightness,
@@ -128,6 +134,7 @@ class MainActivity : ComponentActivity() {
                     }
                     composable<Route.SavedList> {
                         SavedListScreen(
+                            auth = auth,
                             onNavigateToSearch = { latitude: Double, longitude: Double, brightness: Float ->
                                 navController.navigate(
                                     Route.PlantList(
