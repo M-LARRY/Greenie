@@ -2,7 +2,6 @@ package com.example.greenie
 
 import android.content.Context
 import android.net.Uri
-import android.util.Base64
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -10,7 +9,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -42,43 +43,32 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import coil3.compose.AsyncImage
-import coil3.toCoilUri
 import com.example.greenie.model.Plant
 import com.example.greenie.model.Search
 import com.example.greenie.network.ApiClient
 import com.example.greenie.ui.theme.GreenieTheme
 import com.google.firebase.auth.FirebaseAuth
+import io.moyuru.cropify.Cropify
+import io.moyuru.cropify.CropifyOption
+import io.moyuru.cropify.CropifySize.PercentageSize.Companion.FullSize
+import io.moyuru.cropify.rememberCropifyState
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import java.io.File
-import java.io.InputStream
 import java.util.UUID
 
 sealed interface PlantsQueryState {
     data class Success(val plants: List<Plant>) : PlantsQueryState
     data class Error(val message: String) : PlantsQueryState
     data object Loading : PlantsQueryState
-}
-
-fun Uri.toFile(context: Context): File? {
-    val inputStream = context.contentResolver.openInputStream(this)
-    val tempFile = File.createTempFile("temp", ".jpg")
-    return try {
-        tempFile.outputStream().use { fileOut ->
-            inputStream?.copyTo(fileOut)
-        }
-        tempFile.deleteOnExit()
-        inputStream?.close()
-        tempFile
-    } catch (e: Exception) {
-        null
-    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class, DelicateCoroutinesApi::class)
@@ -95,6 +85,8 @@ fun PlantListScreen(
     var textFieldValue by remember { mutableStateOf("") }
     var pictureTaken by remember { mutableStateOf(false) }
     var imageUri by remember { mutableStateOf<Uri?>(null) }
+    val cropifyState = rememberCropifyState()
+    var croppedImage by remember { mutableStateOf<ImageBitmap?>(null) }
 
     val context: Context = LocalContext.current
 
@@ -116,23 +108,6 @@ fun PlantListScreen(
             storageDir.mkdirs()
         }
         return File.createTempFile("JPEG_${UUID.randomUUID()}_", ".jpg", storageDir)
-    }
-
-    var base64String = remember { "" }
-
-    // This function converts the URI to a Base64 string
-    fun convertUriToBase64(uri: Uri) {
-        val inputStream: InputStream? = context.contentResolver.openInputStream(uri)
-        if (inputStream != null) {
-            try {
-                val byteArray = inputStream.readBytes() // Convert InputStream to ByteArray
-                base64String = Base64.encodeToString(byteArray, Base64.NO_WRAP) // Convert ByteArray to Base64 string
-            } catch (e: Exception) {
-                e.printStackTrace() // Handle any exceptions
-            } finally {
-                inputStream.close() // Always close the InputStream
-            }
-        }
     }
 
     LaunchedEffect(Unit) {
@@ -223,24 +198,40 @@ fun PlantListScreen(
                     text = {
                         Column {
                             if (pictureTaken) {
-                                AsyncImage(
-                                    model = imageUri!!.toCoilUri(),
-                                    contentDescription = null
+                                Cropify(
+                                    modifier = Modifier
+                                        .fillMaxHeight(0.5f)
+                                        .fillMaxWidth(),
+                                    uri = imageUri!!,
+                                    state = cropifyState,
+                                    onImageCropped = { croppedImage = it},
+                                    onFailedToLoadImage = {},
+                                    option = CropifyOption(
+                                        frameSize = FullSize
+                                    ),
                                 )
-                            }
-                            TextButton(
-                                onClick = {
-                                    createImageFile().let { file ->
-                                        imageUri = FileProvider.getUriForFile(
-                                            context,
-                                            "com.example.greenie.fileprovider",
-                                            file
-                                        )
-                                        takePictureLauncher.launch(imageUri!!)
-                                    }
-                                },
-                            ) {
-                                Text("Take a picture")
+                                TextButton(
+                                    onClick = {
+                                        cropifyState.crop()
+                                    },
+                                ) {
+                                    Text("Crop")
+                                }
+                            } else {
+                                TextButton(
+                                    onClick = {
+                                        createImageFile().let { file ->
+                                            imageUri = FileProvider.getUriForFile(
+                                                context,
+                                                "com.example.greenie.fileprovider",
+                                                file
+                                            )
+                                            takePictureLauncher.launch(imageUri!!)
+                                        }
+                                    },
+                                ) {
+                                    Text("Take a picture")
+                                }
                             }
                             TextField(
                                 value = textFieldValue,
@@ -252,10 +243,8 @@ fun PlantListScreen(
                     },
                     confirmButton = {
                         TextButton(
+                            enabled = croppedImage != null,
                             onClick = {
-                                convertUriToBase64(imageUri!!)
-                                Log.d("BASE64", base64String)
-                                showDialog = false
                                 scope.launch {
                                     ApiClient.retrofit.saveSearch(
                                         auth.currentUser!!.getIdToken(false).await().token!!,
@@ -265,9 +254,10 @@ fun PlantListScreen(
                                             lng = longitude,
                                             lat = latitude,
                                             brightness = brightness,
-                                            picture = base64String
+                                            picture = croppedImage?.asAndroidBitmap()?.convertToBase64()
                                         )
                                     )
+                                    showDialog = false
                                 }
                             }
                         ) {

@@ -1,6 +1,5 @@
 package com.example.greenie
 
-import android.util.Base64
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -155,7 +154,7 @@ fun SearchItem(
         Column {
             if (search.picture != null){
                 AsyncImage(
-                    model = Base64.decode(search.picture, Base64.DEFAULT),
+                    model = search.picture.convertToBitMap(),
                     contentDescription = ""
                 )
             }

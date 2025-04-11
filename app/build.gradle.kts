@@ -43,7 +43,7 @@ android {
 }
 
 dependencies {
-
+    implementation("com.github.moyuruaizawa:cropify:0.5.1")
     implementation("io.coil-kt.coil3:coil-compose:3.1.0")
     implementation("io.coil-kt.coil3:coil-network-okhttp:3.1.0")
     implementation(libs.googleid)
