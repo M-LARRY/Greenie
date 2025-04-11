@@ -31,7 +31,7 @@ import kotlinx.coroutines.tasks.await
 class MainActivity : ComponentActivity() {
 
     // Private variables to store location data
-    private var hasLocationPermission by mutableStateOf(false)
+    private var hasPermissions by mutableStateOf(false)
     private var location by mutableStateOf(Location())
     private var brightness by mutableFloatStateOf(0f) // Store brightness as a float
     private var locationString by mutableStateOf("")
@@ -46,21 +46,29 @@ class MainActivity : ComponentActivity() {
             ActivityResultContracts.RequestMultiplePermissions()
         )
         { permissions ->
-            hasLocationPermission =
-                permissions.getOrDefault(Manifest.permission.ACCESS_COARSE_LOCATION, false)
+            hasPermissions =
+                permissions.getOrDefault(Manifest.permission.ACCESS_COARSE_LOCATION, false) &&
+                permissions.getOrDefault(Manifest.permission.CAMERA, false)
         }
 
-    private fun checkLocationPermission() {
+    private fun checkPermission() {
         if (ContextCompat.checkSelfPermission(
                 this,
                 Manifest.permission.ACCESS_COARSE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED ||
+            ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.CAMERA
             ) != PackageManager.PERMISSION_GRANTED
         ) {
             activityResultLauncher.launch(
-                arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION)
+                arrayOf(
+                    Manifest.permission.ACCESS_COARSE_LOCATION,
+                    Manifest.permission.CAMERA,
+                )
             )
         } else {
-            hasLocationPermission = true
+            hasPermissions = true
         }
     }
 
@@ -75,12 +83,12 @@ class MainActivity : ComponentActivity() {
             location = Location(loc)
         }
 
-        checkLocationPermission()
+        checkPermission()
 
         setContent {
             GreenieTheme {
-                LifecycleStartEffect(hasLocationPermission) {
-                    if (hasLocationPermission) locationHelper.startLocationUpdates()
+                LifecycleStartEffect(hasPermissions) {
+                    if (hasPermissions) locationHelper.startLocationUpdates()
                     onStopOrDispose {
                         locationHelper.stopLocationUpdates()
                     }
